@@ -1,3 +1,11 @@
+module BST
+( Tree(..)
+, singleton
+, treeInsert
+, treeElem
+) where
+
+
 data Tree a = EmptyTree | Node a (Tree a) (Tree a) deriving (Show, Read,Eq)
 
 
