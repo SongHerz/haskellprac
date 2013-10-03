@@ -20,7 +20,7 @@ main = do
 
 dispatchError :: String -> [Action] -> IO ()
 dispatchError errAction actionList = do
-    let actionStrs = unwords $ map ( (\action -> "\"" ++ action ++ "\"") . fst) actionList
+    let actionStrs = unwords $ map ((\action -> "\"" ++ action ++ "\"") . fst) actionList
     putStrLn ( "Expect " ++ actionStrs ++ ", but got " ++ errAction)
 
 add :: [String] -> IO ()
