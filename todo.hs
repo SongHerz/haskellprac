@@ -3,8 +3,9 @@ import System.Directory
 import System.IO
 import Data.List
 
+type Action = (String, [String] -> IO ())
 
-dispatch :: [(String, [String] -> IO ())]
+dispatch :: [Action]
 dispatch =  [ ("add", add)
             , ("view", view)
             , ("remove", remove)
@@ -13,9 +14,14 @@ dispatch =  [ ("add", add)
 
 main = do
     (command:args) <- getArgs
-    let (Just action) = lookup command dispatch
-    action args
+    case ( lookup command dispatch) of
+        Just action -> action args
+        otherwise   -> dispatchError command dispatch
 
+dispatchError :: String -> [Action] -> IO ()
+dispatchError errAction actionList = do
+    let actionStrs = unwords $ map ( (\action -> "\"" ++ action ++ "\"") . fst) actionList
+    putStrLn ( "Expect " ++ actionStrs ++ ", but got " ++ errAction)
 
 add :: [String] -> IO ()
 add [fileName, todoItem] = appendFile fileName (todoItem ++ "\n")
