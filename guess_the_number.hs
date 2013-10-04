@@ -1,3 +1,4 @@
+import Data.Char
 import System.IO
 import System.Random
 import Control.Monad(when)
@@ -14,8 +15,25 @@ askForNumber gen = do
     hFlush stdout
     numberString <- getLine
     when (not $ null numberString) $ do
-        let number = read numberString
-        if randNumber == number
-            then putStrLn "You are correct!"
-            else putStrLn $ "Sorry, it was " ++ show randNumber
+        let inputNumber = case (reads numberString) of
+                        [(val, "")]           -> Right val
+                        [(val, nonEmptyRest)] -> let nonSpaceChars = ltrim . rtrim $ nonEmptyRest
+                                                 in if null nonSpaceChars
+                                                        then Right val
+                                                        else Left $ "Error: Additional characters \"" ++ nonSpaceChars ++ "\""
+                        []                    -> if null numberString
+                                                    then Left "Error: No input"
+                                                    else Left $ "Error: Non-digit input \"" ++ numberString ++ "\""
+                        _                     -> Left "Error: Ambiguous input"
+
+        case inputNumber of
+            Right val ->
+                if randNumber == val
+                    then putStrLn "You are correct!"
+                    else putStrLn $ "Sorry, it was " ++ show randNumber
+            Left msg -> putStrLn msg
         askForNumber newGen
+
+
+ltrim = dropWhile isSpace
+rtrim = reverse . ltrim . reverse
