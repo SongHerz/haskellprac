@@ -1,2 +1,4 @@
 A basic tutorial on hunit
 http://leiffrenzel.de/papers/getting-started-with-hunit.html
+
+Except FindIdentifier_Test.hs, all other files are from http://leiffrenzel.de/papers/getting-started-with-hunit.zip

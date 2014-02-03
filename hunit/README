@@ -1,0 +1,28 @@
+README
+======
+
+Leif Frenzel <leiffrenzel@googlemail.com>
+
+This code is part of a tutorial about using HUnit (a unit testing tool
+for Haskell). The text of the tutorial can be found at 
+
+  http://leiffrenzel.de/papers/getting-started-with-hunit.html
+
+To run the test cases, open a terminal and type
+
+  ghci FindIdentifier_Test
+  *FindIdentifier_Test>main
+
+Have fun :-)
+
+
+Legal
+-----
+
+The code is Copyright (c) 2006-2007 by Leif Frenzel. It is made available
+under the terms of a BSD-style license. See the LICENSE file provided with
+this software for more information.
+
+All code under Language/Haskell is a modified version of the haskell-src
+package from the standard library. It is itself licensed under a BSD-style
+license (see the file LICENSE-haskell-src).
