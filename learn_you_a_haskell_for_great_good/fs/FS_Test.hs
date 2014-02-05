@@ -33,6 +33,9 @@ myDisk =
         , programsFolder
         ]
 
+getZipper :: Maybe z -> z
+getZipper (Just z) = z
+
 test_rootGoUp = TestCase $ assertEqual
     "Should not go up at root" Nothing ( fsUp (myDisk, []))
 
@@ -40,18 +43,27 @@ test_toNonExistItem = TestCase $ assertEqual
     "Should fail on non-exist item" Nothing ( fsTo "NON-EXIST-ITEM" (myDisk, []))
 
 test_normGoUp = TestCase $ do
-    let pics_folder_zipper = case fsTo "pics" (myDisk, []) of
-                                Just z -> z
+    let pics_folder_zipper = getZipper $ fsTo "pics" (myDisk, [])
     -- go to pic folders first
     assertEqual "Should go to pics folder" picsFolder $ fst pics_folder_zipper 
     -- Then, go up to the root
-    let root_folder_zipper = case fsUp pics_folder_zipper of
-                                Just z -> z
+    let root_folder_zipper = getZipper $ fsUp pics_folder_zipper
     assertEqual "Should go to the root now" myDisk $ fst root_folder_zipper
     
 
+myDisk2_0 :: FSItem
+myDisk2_0 = Folder "Root" [ File "file0" "contents"]
+
+myDisk2_1 :: FSItem
+myDisk2_1 = Folder "Root" [ File "file1" "contents"]
+
+test_rename = TestCase $ do
+    assertEqual "Should be the same file system" myDisk2_1 $ fst $ getZipper $ 
+                return (myDisk2_0, []) >>= fsTo "file0" >>= fsRename "file1" >>= fsUp
+    
+
 tests = TestLabel "Basic Tests" $ TestList
-     [ test_rootGoUp, test_toNonExistItem, test_normGoUp ]
+     [ test_rootGoUp, test_toNonExistItem, test_normGoUp, test_rename ]
 
 
 main = runTestTT tests
