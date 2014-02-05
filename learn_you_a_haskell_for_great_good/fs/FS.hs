@@ -1,21 +1,21 @@
 module FS
  ( FSItem (..)
  , FSZipper
- , myDisk
  , fsUp
  , fsTo
  , fsRename
- , fsNewFile
+ , fsAttach
+ , fsRemove
  ) where
 
 import Data.List (break)
 
 type Name = String
 type Data = String
-data FSItem = File Name Data | Folder Name [FSItem] deriving (Show)
+data FSItem = File Name Data | Folder Name [FSItem] deriving (Show, Eq)
 
 
-data FSCrumb = FSCrumb Name [FSItem] [FSItem] deriving (Show)
+data FSCrumb = FSCrumb Name [FSItem] [FSItem] deriving (Show, Eq)
 type FSZipper = (FSItem, [FSCrumb])
 
 fsUp :: FSZipper -> Maybe FSZipper
@@ -41,13 +41,13 @@ fsRename newName (File name dat, bs) = Just (File newName dat, bs)
 fsAttach :: FSItem -> FSZipper -> Maybe FSZipper
 fsAttach item (Folder folderName items, bs) =
     Just (Folder folderName (item:items), bs)
-fsAttach item (File _ _) = Nothing
+fsAttach item (File _ _, _) = Nothing
 
 -- Remove an item with given name in the current focus
 fsRemove :: Name -> FSZipper -> Maybe FSZipper
 fsRemove name (Folder folderName items, bs) =
     case break (nameIs name) items of
         (_, []) -> Nothing
-        (ls, item:rs) -> Just (Folder folderName ls ++ rs, bs)
+        (ls, item:rs) -> Just (Folder folderName (ls ++ rs), bs)
 
 
