@@ -51,19 +51,27 @@ test_normGoUp = TestCase $ do
     assertEqual "Should go to the root now" myDisk $ fst root_folder_zipper
     
 
-myDisk2_0 :: FSItem
-myDisk2_0 = Folder "Root" [ File "file0" "contents"]
+test_rename = TestCase $ assertEqual
+    "Should be the same file system" myDisk_1 $ fst $ getZipper $ 
+        return (myDisk_0, []) >>= fsTo "file0" >>= fsRename "file1" >>= fsUp
+    where myDisk_0 = Folder "Root" [ File "file0" "contents"]
+          myDisk_1 = Folder "Root" [ File "file1" "contents"]
 
-myDisk2_1 :: FSItem
-myDisk2_1 = Folder "Root" [ File "file1" "contents"]
+test_attachToFile = TestCase $ assertEqual
+    "Should not attach to a File" Nothing $ return (File "root" "", []) >>= fsAttach (File "f" "")
 
-test_rename = TestCase $ do
-    assertEqual "Should be the same file system" myDisk2_1 $ fst $ getZipper $ 
-                return (myDisk2_0, []) >>= fsTo "file0" >>= fsRename "file1" >>= fsUp
+test_attachToFolder = TestCase $ assertEqual 
+    "Should be the same file system" myDisk_1 $ fst $ getZipper $
+        return (myDisk_0, []) >>= fsAttach fileItem
+    where fileItem = File "file" ""
+          myDisk_0 = Folder "Root" []
+          myDisk_1 = Folder "Root" [ File "file" ""]
     
 
 tests = TestLabel "Basic Tests" $ TestList
-     [ test_rootGoUp, test_toNonExistItem, test_normGoUp, test_rename ]
+     [  test_rootGoUp, test_toNonExistItem, test_normGoUp, test_rename,
+        test_attachToFile, test_attachToFolder
+ ]
 
 
 main = runTestTT tests
