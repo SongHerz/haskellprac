@@ -1,3 +1,13 @@
+module FS
+ ( FSItem (..)
+ , FSZipper
+ , myDisk
+ , fsUp
+ , fsTo
+ , fsRename
+ , fsNewFile
+ ) where
+
 import Data.List (break)
 
 type Name = String
@@ -30,27 +40,36 @@ myDisk =
 data FSCrumb = FSCrumb Name [FSItem] [FSItem] deriving (Show)
 type FSZipper = (FSItem, [FSCrumb])
 
-fsUp :: FSZipper -> FSZipper
-fsUp (item, FSCrumb name ls rs:bs) = (Folder name (ls ++ [item] ++ rs), bs)
+fsUp :: FSZipper -> Maybe FSZipper
+fsUp (item, FSCrumb name ls rs:bs) = Just (Folder name (ls ++ [item] ++ rs), bs)
+fsUp (_, []) = Nothing
 
-fsTo :: Name -> FSZipper -> FSZipper
+fsTo :: Name -> FSZipper -> Maybe FSZipper
 fsTo name (Folder folderName items, bs) = 
-    let (ls, item:rs) = break (nameIs name) items
-    in  (item, FSCrumb folderName ls rs:bs)
+    case break (nameIs name) items of
+        (_, []) -> Nothing
+        (ls, item:rs) -> Just (item, FSCrumb folderName ls rs:bs)
 
 nameIs :: Name -> FSItem -> Bool
 nameIs name (Folder folderName _) = name == folderName
 nameIs name (File fileName _) = name == fileName
 
-fsRename :: Name -> FSZipper -> FSZipper
-fsRename newName (Folder name items, bs) = (Folder newName items, bs)
-fsRename newName (File name dat, bs) = (File newName dat, bs)
+-- Rename current focused item with given name
+fsRename :: Name -> FSZipper -> Maybe FSZipper
+fsRename newName (Folder name items, bs) = Just (Folder newName items, bs)
+fsRename newName (File name dat, bs) = Just (File newName dat, bs)
 
-fsNewFile :: FSItem -> FSZipper -> FSZipper
-fsNewFile item (Folder folderName items, bs) =
-    (Folder folderName (item:items), bs)
+-- attach a new item in the current focus
+fsAttach :: FSItem -> FSZipper -> Maybe FSZipper
+fsAttach item (Folder folderName items, bs) =
+    Just (Folder folderName (item:items), bs)
+fsAttach item (File _ _) = Nothing
 
+-- Remove an item with given name in the current focus
+fsRemove :: Name -> FSZipper -> Maybe FSZipper
+fsRemove name (Folder folderName items, bs) =
+    case break (nameIs name) items of
+        (_, []) -> Nothing
+        (ls, item:rs) -> Just (Folder folderName ls ++ rs, bs)
 
-infixl 5 -:
-x -: f = f x
 
