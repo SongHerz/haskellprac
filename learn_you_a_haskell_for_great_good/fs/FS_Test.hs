@@ -66,12 +66,22 @@ test_attachToFolder = TestCase $ assertEqual
     where fileItem = File "file" ""
           myDisk_0 = Folder "Root" []
           myDisk_1 = Folder "Root" [ File "file" ""]
-    
+
+
+test_rmNonExistItem = TestCase $ assertEqual
+    "Should fail on non-exist item" Nothing $ 
+        return (Folder "Root" [], []) >>= fsRemove "NON-EXIST-ITEM"
+
+test_rmAnItem = TestCase $ assertEqual
+    "Should remove an entry" myDisk_1 $ fst $ getZipper $
+        return (myDisk_0, []) >>= fsRemove "file1"
+    where myDisk_0 = Folder "Root" [ File "file0" "", File "file1" "", File "file2" ""]
+          myDisk_1 = Folder "Root" [ File "file0" "", File "file2" ""]
+
 
 tests = TestLabel "Basic Tests" $ TestList
      [  test_rootGoUp, test_toNonExistItem, test_normGoUp, test_rename,
-        test_attachToFile, test_attachToFolder
- ]
+        test_attachToFile, test_attachToFolder, test_rmNonExistItem, test_rmAnItem]
 
 
 main = runTestTT tests
