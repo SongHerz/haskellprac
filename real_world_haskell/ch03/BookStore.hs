@@ -14,3 +14,11 @@ data BookReview = BookReview BookInfo CustomerID ReviewBody
 
 type BookRecord = (BookInfo, BookReview)
          
+type CardHolder = String
+type CardNumber = String
+type Address = [String]
+
+data BillingInfo = CreditCard CardNumber CardHolder Address
+                 | CaseOnDelivery
+                 | Invoice CustomerID
+                   deriving (Show)
