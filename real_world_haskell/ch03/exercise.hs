@@ -14,10 +14,13 @@ meanList xs = listSum xs / fromIntegral ( listLength xs)
 
 
 -- For ex4
+reverseList :: [a] -> [a]
+reverseList xs = innerReverse xs []
+                 where innerReverse [] ys     = ys
+                       innerReverse (x:xs) ys = innerReverse xs (x:ys)
+
 plaindromeList :: [a] -> [a]
-plaindromeList xs = xs ++ reverseList xs []
-                    where reverseList [] ys     = ys
-                          reverseList (x:xs) ys = reverseList xs (x:ys)
+plaindromeList xs = xs ++ reverseList xs
 
 
 -- For ex5
@@ -28,4 +31,12 @@ isPlaindromeList xs
     | head xs == last xs = isPlaindromeList (init (tail xs))
     | otherwise          = False
 
--- FIXME: check http://book.realworldhaskell.org/read/defining-types-streamlining-functions.html for other implementation of ex4 and ex5
+-- The above implementation on ex5 is bad, because the time complexity on 
+-- last and init is O(n) ?? NOT SURE YET, BUT PROBABLY RIGHT.
+-- The reverse version is much more faster.
+isPlaindromeList' :: Eq a => [a] -> Bool
+isPlaindromeList' xs
+    | length xs `mod` 2 == 1 = False
+    | otherwise              = xs == reverseList xs
+
+
