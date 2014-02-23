@@ -71,6 +71,8 @@ intersperse sep (xs:yses) = xs ++ (sep : intersperse sep yses)
 
 -- For ex8
 -- Refer Tree.hs: height function.
+
+-- For ex9
 data Point a = Point a a deriving (Show)
 data Direction = LeftTurn | RightTurn | Stright deriving (Show, Eq)
 
