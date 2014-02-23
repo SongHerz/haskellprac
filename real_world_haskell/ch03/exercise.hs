@@ -68,3 +68,6 @@ intersperse :: a -> [[a]] -> [a]
 intersperse _   []        = []
 intersperse _   [xs]      = xs
 intersperse sep (xs:yses) = xs ++ (sep : intersperse sep yses)
+
+-- For ex8
+-- Refer Tree.hs: height function.

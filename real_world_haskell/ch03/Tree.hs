@@ -18,6 +18,14 @@ nodesAreSame _ _ = Nothing
 simpleTree = Node "parent" (Node "left child" Empty Empty)
                            (Node "right child" Empty Empty)
 
+height :: Tree a -> Int
+height Empty        = 0
+height (Node _ a b) = let heightA = height a
+                          heightB = height b
+                      in 1 + if heightA > heightB
+                             then heightA
+                             else heightB
+
 
 data MaybeTree a = MaybeTree a (Maybe (MaybeTree a)) (Maybe (MaybeTree a))
                    deriving (Show)
