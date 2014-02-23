@@ -1,3 +1,6 @@
+import Data.List (sortBy)
+import Data.Ord  (comparing)
+
 -- For ex1 and ex2
 listLength :: [a] -> Int
 listLength []     = 0
@@ -40,3 +43,22 @@ isPlaindromeList' xs
     | otherwise              = xs == reverseList xs
 
 
+-- For ex6
+sortListLen :: [[a]] -> [[a]]
+sortListLen xses = sortBy (\xs ys -> compare (length xs) (length ys)) xses
+
+-- Another version with comparing
+sortListLen' :: [[a]] -> [[a]]
+sortListLen' xses = sortBy (comparing length) xses
+
+-- This is another version from Kenneth Hoste on the comment of ex6
+-- http://book.realworldhaskell.org/read/defining-types-streamlining-functions.html
+-- With this solution, when a long and a short lists are compared, the long list will
+-- not be traversed entirely.
+sortListLen'' :: [[a]] -> [[a]]
+sortListLen'' xses = sortBy compareListByLength xses
+                  where compareListByLength [] [] = EQ
+                        compareListByLength _ []  = GT
+                        compareListByLength [] _  = LT
+                        compareListByLength (_:xs) (_:ys) = compareListByLength xs ys
+--
