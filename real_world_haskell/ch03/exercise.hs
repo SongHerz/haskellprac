@@ -61,4 +61,10 @@ sortListLen'' xses = sortBy compareListByLength xses
                         compareListByLength _ []  = GT
                         compareListByLength [] _  = LT
                         compareListByLength (_:xs) (_:ys) = compareListByLength xs ys
---
+
+
+-- For ex7
+intersperse :: a -> [[a]] -> [a]
+intersperse _   []        = []
+intersperse _   [xs]      = xs
+intersperse sep (xs:yses) = xs ++ (sep : intersperse sep yses)
