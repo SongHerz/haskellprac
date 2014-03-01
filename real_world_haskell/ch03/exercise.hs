@@ -120,8 +120,9 @@ angle (Point x y) (Point startX startY) =
        else atan2 dy dx
 
 
+-- After the algorithm, the points are clock-wise ordered
 grahamScan :: (RealFloat a, Ord a) => [Point a] -> [Point a]
-grahamScan ps = findBoundary newps []
+grahamScan ps = reverse $ findBoundary newps []
                 where startPoint = lowest ps
                       newps = sortBy (comparing (\p -> angle p startPoint)) ps 
                       -- ps: points, bps: boundary points
@@ -141,7 +142,7 @@ showConvexHull' = grahamScan [ Point 0 (-3), Point 2 2, Point (-1) 1, Point 3 0,
 isConvexHull :: (RealFloat a, Ord a) => [Point a] -> Bool
 isConvexHull ps = all (\d -> d == LeftTurn || d == Stright) (directions ps)
 
--- checkIsConvexHull :: (RealFloat a, Ord a) => [(a, a)] -> Bool
+checkIsConvexHull :: [(Double, Double)] -> Bool
 checkIsConvexHull ps = isConvexHull $ grahamScan [Point x y | (x, y) <- ps]
 
-main = quickCheck checkIsConvexHull
+main = quickCheck checkIsConvexHull 
