@@ -1,5 +1,6 @@
 import Data.List (sortBy)
 import Data.Ord  (comparing)
+import Test.QuickCheck (quickCheck)
 
 -- For ex1 and ex2
 listLength :: [a] -> Int
@@ -136,3 +137,11 @@ showConvexHull = grahamScan [ Point 2 2, Point (-1) 1, Point 3 0, Point 1 (-1.5)
 
 -- Expected result is: [Point (-1.0) 1.0,Point 2.0 2.0,Point 3.0 0.0,Point 0.0 (-3.0),Point 0.0 (-3.0)]
 showConvexHull' = grahamScan [ Point 0 (-3), Point 2 2, Point (-1) 1, Point 3 0, Point 1 (-1.5), Point 0 (-3)]
+
+isConvexHull :: (RealFloat a, Ord a) => [Point a] -> Bool
+isConvexHull ps = all (\d -> d == LeftTurn || d == Stright) (directions ps)
+
+-- checkIsConvexHull :: (RealFloat a, Ord a) => [(a, a)] -> Bool
+checkIsConvexHull ps = isConvexHull $ grahamScan [Point x y | (x, y) <- ps]
+
+main = quickCheck checkIsConvexHull
