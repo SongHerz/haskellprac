@@ -126,11 +126,12 @@ grahamScan ps = reverse $ findBoundary newps []
                 where startPoint = lowest ps
                       newps = sortBy (comparing (\p -> angle p startPoint)) ps 
                       -- ps: points, bps: boundary points
-                      findBoundary (p0:p1:p2:ps) bps
-                        | direction p0 p1 p2 == RightTurn = findBoundary (p0:p2:ps) bps
-                        | otherwise                       = findBoundary (p1:p2:ps) (p0:bps)
-                      -- because bps is appended reversely, reverse ps first
-                      findBoundary ps bps = reverse ps ++ bps
+                      findBoundary []     bps  = bps
+                      findBoundary (p:ps) []   = findBoundary ps [p]
+                      findBoundary (p:ps) [bp] = findBoundary ps (p:[bp])
+                      findBoundary (p:ps) (bp1:bp0:bps)
+                        | direction bp0 bp1 p == RightTurn = findBoundary (p:ps) (bp0:bps)
+                        | otherwise                        = findBoundary ps (p:bp1:bp0:bps)
                                                                 
 
 -- Expected result is: [Point (-1.0) 1.0,Point 2.0 2.0,Point 3.0 0.0,Point 0.0 (-3.0)]
