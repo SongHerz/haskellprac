@@ -90,3 +90,49 @@ direction (Point ax ay) (Point bx by) (Point cx cy)
 directions :: (Num a, Ord a) => [Point a] -> [Direction]
 directions (a:b:c:xs) = direction a b c : directions (b:c:xs)
 directions _          = []
+
+-- For ex12
+-- The algorithm is from:
+-- http://en.wikipedia.org/wiki/Graham_scan
+-- The algorithm is to find convex hull be given series of 2d points
+
+-- Find the lowest point from a given list
+lowest :: (Num a, Ord a) => [Point a] -> Point a
+lowest ps = innerLowest (head ps) (tail ps)
+            where innerLowest (Point x0 y0) [] = Point x0 y0
+                  innerLowest (Point x0 y0) (Point x1 y1:ps)
+                      | y0 < y1   = innerLowest (Point x0 y0) ps
+                      | y0 > y1   = innerLowest (Point x1 y1) ps
+                      -- y0 == y1, check x
+                      | x0 < x1   = innerLowest (Point x0 y0) ps
+                      -- y0 == y1 and x0 >= x1, pick point 1
+                      | otherwise = innerLowest (Point x1 y1) ps
+
+-- Calculate the angle of one point relative to a start point
+-- When the point is the same as start point, the angle is defined as (-pi)
+angle :: (RealFloat a) => Point a -> Point a -> a
+angle (Point x y) (Point startX startY) =
+    let dy = y - startY
+        dx = x - startX
+    in if dy == 0 && dy == 0
+       then (-pi)
+       else atan2 dy dx
+
+
+grahamScan :: (RealFloat a, Ord a) => [Point a] -> [Point a]
+grahamScan ps = findBoundary newps []
+                where startPoint = lowest ps
+                      newps = sortBy (comparing (\p -> angle p startPoint)) ps 
+                      -- ps: points, bps: boundary points
+                      findBoundary (p0:p1:p2:ps) bps
+                        | direction p0 p1 p2 == RightTurn = findBoundary (p0:p2:ps) bps
+                        | otherwise                       = findBoundary (p1:p2:ps) (p0:bps)
+                      -- because bps is appended reversely, reverse ps first
+                      findBoundary ps bps = reverse ps ++ bps
+                                                                
+
+-- Expected result is: [Point (-1.0) 1.0,Point 2.0 2.0,Point 3.0 0.0,Point 0.0 (-3.0)]
+showConvexHull = grahamScan [ Point 2 2, Point (-1) 1, Point 3 0, Point 1 (-1.5), Point 0 (-3)]
+
+-- Expected result is: [Point (-1.0) 1.0,Point 2.0 2.0,Point 3.0 0.0,Point 0.0 (-3.0),Point 0.0 (-3.0)]
+showConvexHull' = grahamScan [ Point 0 (-3), Point 2 2, Point (-1) 1, Point 3 0, Point 1 (-1.5), Point 0 (-3)]
