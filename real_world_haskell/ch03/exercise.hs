@@ -74,7 +74,7 @@ intersperse sep (xs:yses) = xs ++ (sep : intersperse sep yses)
 -- Refer Tree.hs: height function.
 
 -- For ex9/ex10
-data Point a = Point a a deriving (Show)
+data Point a = Point a a deriving (Show, Eq)
 data Direction = LeftTurn | RightTurn | Stright deriving (Show, Eq)
 
 direction :: (Num a, Ord a) => Point a -> Point a -> Point a -> Direction
@@ -134,10 +134,10 @@ grahamScan ps = reverse $ findBoundary newps []
                         | otherwise                        = findBoundary ps (p:bp1:bp0:bps)
                                                                 
 
--- Expected result is: [Point (-1.0) 1.0,Point 2.0 2.0,Point 3.0 0.0,Point 0.0 (-3.0)]
+-- Expected result is: [Point 0.0 (-3.0), Point 3.0 0.0, Point 2.0 2.0, Point (-1.0) 1.0]
 showConvexHull = grahamScan [ Point 2 2, Point (-1) 1, Point 3 0, Point 1 (-1.5), Point 0 (-3)]
 
--- Expected result is: [Point (-1.0) 1.0,Point 2.0 2.0,Point 3.0 0.0,Point 0.0 (-3.0),Point 0.0 (-3.0)]
+-- Expected result is: [Point 0.0 (-3.0), Point 0.0 (-3.0), Point 3.0 0.0, Point 2.0 2.0, Point (-1.0) 1.0]
 showConvexHull' = grahamScan [ Point 0 (-3), Point 2 2, Point (-1) 1, Point 3 0, Point 1 (-1.5), Point 0 (-3)]
 
 isConvexHull :: (RealFloat a, Ord a) => [Point a] -> Bool
@@ -146,4 +146,9 @@ isConvexHull ps = all (\d -> d == LeftTurn || d == Stright) (directions ps)
 checkIsConvexHull :: [(Double, Double)] -> Bool
 checkIsConvexHull ps = isConvexHull $ grahamScan [Point x y | (x, y) <- ps]
 
-main = quickCheck checkIsConvexHull 
+main = do 
+        quickCheck checkIsConvexHull 
+        quickCheck (grahamScan [ Point 2 2, Point (-1) 1, Point 3 0, Point 1 (-1.5), Point 0 (-3)]
+                    == [Point 0.0 (-3.0), Point 3.0 0.0, Point 2.0 2.0, Point (-1.0) 1.0])
+        quickCheck (grahamScan [ Point 0 (-3), Point 2 2, Point (-1) 1, Point 3 0, Point 1 (-1.5), Point 0 (-3)]
+                    == [Point 0.0 (-3.0), Point 0.0 (-3.0), Point 3.0 0.0, Point 2.0 2.0, Point (-1.0) 1.0])
