@@ -20,14 +20,13 @@ safeInit xs = Just (init xs)
 
 -- For ex2, on page 84
 splitWith :: (a -> Bool) -> [a] -> [[a]]
+splitWith _    [] = []
 splitWith pred xs = let (pre, suf) = break pred xs
+                        rest = if null suf then [] else (tail suf)
                     in if null pre
-                       then if not (null suf)
-                            then splitWith pred (tail suf)
-                            else []
-                       else if not (null suf)
-                            then pre : splitWith pred (tail suf)
-                            else pre : []
+                       then splitWith pred rest
+                       else pre : splitWith pred rest
+
 
 main = do
     quickCheck ( splitWith (\x -> x == ',') "abc" == ["abc"])
