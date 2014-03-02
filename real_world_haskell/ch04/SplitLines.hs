@@ -1,3 +1,5 @@
+module SplitLines (splitLines) where
+
 splitLines :: String -> [String]
 splitLines [] = []
 splitLines cs =
