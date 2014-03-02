@@ -3,6 +3,8 @@
 import InteractWith (mainWith)
 
 -- Implement this without loop support
+-- Of course, map can be used to implement it also.
+-- It is said, map has been mentioned in the book until now, but I cannot remember
 firstWords :: String -> [String]
 firstWords [] = []
 firstWords cs = let (pre, suf) = break isLineTerminator cs
@@ -13,4 +15,11 @@ firstWords cs = let (pre, suf) = break isLineTerminator cs
 
 isLineTerminator c = c == '\n'
 
-main = mainWith (\cs -> unlines (firstWords cs))
+
+-- Another version with map
+firstWords' :: String -> [String]
+firstWords' cs = map mayEmptyHead (map words (lines cs))
+                 where mayEmptyHead [] = []
+                       mayEmptyHead xs = head xs
+
+main = mainWith (\cs -> unlines (firstWords' cs))
