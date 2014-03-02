@@ -4,15 +4,12 @@ import InteractWith (mainWith)
 
 -- Implement this without loop support
 firstWords :: String -> [String]
+firstWords [] = []
 firstWords cs = let (pre, suf) = break isLineTerminator cs
                     preWords = words pre
-                in if null suf
-                   then if null preWords
-                        then []
-                        else head preWords : []
-                   else if null preWords
-                        then firstWords (tail suf)
-                        else head preWords : firstWords (tail suf)
+                    preFstWord = if null preWords then "" else (head preWords)
+                    rest = if null suf then [] else (tail suf)
+                in preFstWord : firstWords rest
 
 isLineTerminator c = c == '\n'
 
