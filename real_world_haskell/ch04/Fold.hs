@@ -24,3 +24,9 @@ map_foldr f xs = foldr step [] xs
 foldl_foldr :: ( a -> b -> a) -> a -> [b] -> a
 foldl_foldr f acc xs = foldr step id xs acc
     where step x g a = g (f a x)
+
+identity :: [a] -> [a]
+identity xs = foldr (:) [] xs
+
+append :: [a] -> [a] -> [a]
+append xs ys = foldr (:) ys xs
