@@ -31,6 +31,9 @@ asInt_foldl' xs
           step acc x
             | isDigit x = let newDigit = digitToInt x
                               newAcc = acc * 10 + newDigit
+                          -- FIXME: I do not know, 
+                          -- if there are some proved more elegant solution 
+                          -- to tell overflow.
                           in if (newAcc - newDigit) `div` 10 == acc
                              then newAcc
                              else error "overflow"
