@@ -27,6 +27,18 @@ splitWith pred xs = let (pre, suf) = break pred xs
                        then splitWith pred rest
                        else pre : splitWith pred rest
 
+-- For ex5, on page 98
+myConcat :: [[a]] -> [a]
+myConcat xses = foldr (\xs acc -> xs ++ acc) [] xses
+--
+-- Here are some other style of myConcat
+myConcat' :: [[a]] -> [a]
+myConcat' = foldr (++) []
+
+-- Actually, this implementation also uses foldr to implement (++)
+myConcat'' :: [[a]] -> [a]
+myConcat'' = foldr (\xs acc -> foldr (:) acc xs) []
+
 
 main = do
     quickCheck ( splitWith (\x -> x == ',') "abc" == ["abc"])
