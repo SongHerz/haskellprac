@@ -1,3 +1,4 @@
+import Data.Char (isSpace)
 import Test.QuickCheck (quickCheck)
 
 -- For ex1, on page 84
@@ -53,7 +54,7 @@ myTakeWhile' p xs = foldr step [] xs
             | p x       = x : acc
             | otherwise = []
 
--- For ex8, on page 98
+-- For ex8/9, on page 98
 -- The function eq should be an equality function.
 -- In other words, the function should fulfill (eq a b) == (eq b a).
 --
@@ -82,6 +83,52 @@ myGroupBy' :: (a -> a -> Bool) -> [a] -> [[a]]
 myGroupBy' _ []  = []
 myGroupBy' eq (x:xs) = let (ys,zs)  = span (eq x) xs
                    in (x : ys) : myGroupBy' eq zs
+
+-- For ex10, on page 98
+myAny :: (a -> Bool) -> [a] -> Bool
+myAny f xs = foldr step False xs
+    where step x acc
+            | f x       = True
+            | otherwise = acc
+
+-- A slim one
+myAny' :: (a -> Bool) -> [a] -> Bool
+myAny' f xs = foldr (\x acc -> f x || acc) False xs
+
+-- A slimer one
+myAny'' :: (a -> Bool) -> [a] -> Bool
+myAny'' f = foldr ((||).f) False
+
+
+-- Here is an recursive version
+myCycle :: [a] -> [a]
+myCycle [] = error "empty list"
+myCycle xs = foldr (:) (myCycle xs) xs
+
+-- An clear version without fold is
+myCycle' :: [a] -> [a]
+myCycle' [] = error "empty list"
+myCycle' xs = xs ++ myCycle' xs
+
+-- This is foldl version.
+-- Of course, the foldl version is not as elegant as foldr version
+myCycle'' :: [a] -> [a]
+myCycle'' [] = error "empty list"
+myCycle'' xs = foldl (\acc x -> x : acc) (myCycle'' xs) (reverse xs)
+
+
+myWords :: String -> [String]
+myWords xs = fst( helper xs)
+    where helper xs = foldr step ([],True) xs
+          step x (acc, lastIsSpace)
+            | isSpace x = (acc, True)
+            | otherwise = ( if lastIsSpace
+                            then [x] : acc
+                            else (x : head acc) : (tail acc), False)
+
+myUnlines :: [String] -> String
+myUnlines xs = foldr (\x acc -> x ++ ('\n':acc)) "" xs
+
 
 
 main = do
