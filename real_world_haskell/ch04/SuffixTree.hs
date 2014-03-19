@@ -1,3 +1,5 @@
+import Data.List (tails)
+
 suffixes :: [a] -> [[a]]
 suffixes xs@(_:xs') = xs : suffixes xs'
 suffixes _          = []
@@ -8,3 +10,13 @@ suffixes _          = []
 noAsPattern :: [a] -> [[a]]
 noAsPattern (x:xs) = (x:xs) : noAsPattern xs
 noAsPattern _      = []
+
+suffixes2 :: [a] -> [[a]]
+suffixes2 xs = init (tails xs)
+
+compose :: (b -> c) -> (a -> b) -> a -> c
+compose f g x = f (g x)
+
+suffixes4 = compose init tails
+
+suffixes5 = init . tails
