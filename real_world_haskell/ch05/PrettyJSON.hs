@@ -1,8 +1,13 @@
-import SimpleJSON
-import PrettyStub
+module PrettyJSON
+    (
+      renderJValue
+    ) where
+
 import Numeric (showHex)
-import Data.Bits (shiftR, (.&.))
 import Data.Char (ord)
+import Data.Bits (shiftR, (.&.))
+import SimpleJSON (JValue(..))
+import PrettyStub (Doc, (<>), char, double, fsep, hcat, punctuate, text)
 
 renderJValue :: JValue -> Doc
 renderJValue (JBool True)   = text "true"
@@ -57,7 +62,3 @@ series :: Char -> Char -> (a -> Doc) -> [a] -> Doc
 series open close item = enclose open close
                         . fsep . punctuate (char ',') . map item
 
-punctuate :: Doc -> [Doc] -> [Doc]
-punctuate p []      = []
-punctuate p [d]     = [d]
-punctuate p (d:ds)  = (d <> p) : punctuate p ds
