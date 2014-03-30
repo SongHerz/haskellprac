@@ -7,7 +7,9 @@ import Numeric (showHex)
 import Data.Char (ord)
 import Data.Bits (shiftR, (.&.))
 import SimpleJSON (JValue(..))
-import PrettyStub (Doc, (<>), char, double, fsep, hcat, punctuate, text)
+import Prettify (Doc, (<>), char, double, text, fsep, hcat, punctuate,
+                -- Re-export compact and pretty functions from Prettify
+                compact, pretty)
 
 renderJValue :: JValue -> Doc
 renderJValue (JBool True)   = text "true"
