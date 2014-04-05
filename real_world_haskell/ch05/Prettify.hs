@@ -119,33 +119,41 @@ fill width x        = if longestWidth >= width || remainWidth >= width
                          then x
                          else if remainWidth >=longestWidth
                               then x <> text (replicate (width - remainWidth) ' ')
-                              else replaceWithLongest x
-                      where (longest, longestWidth, remainWidth) = longestLine x
-                            replaceWithLongest d =
-                               if d == longest
-                               then d <> text (replicate (width - longestWidth) ' ')
-                               else case d of
-                                       a `Concat` b -> (replaceWithLongest a) `Concat` (replaceWithLongest b)
-                                       a `Union` b  -> a `Union` (replaceWithLongest b)
-                                       _            -> d
+                              else replaceWithLongest x ds
+                      where (longest, longestWidth, remainWidth, ds) = longestLine x
+                            replaceWithLongest Line [] = text (replicate (width - longestWidth) ' ') <> Line
+                            replaceWithLongest _    [] = error "Should not be here"
+                            replaceWithLongest d (ad : ds) =
+                                case d of
+                                   a `Concat` b | ad == LEFT  -> replaceWithLongest a ds `Concat` b
+                                                | ad == RIGHT -> a `Concat` replaceWithLongest b ds
+                                   a `Union` b  | ad == RIGHT -> a `Union` (replaceWithLongest b ds)
+                                                | ad == LEFT  -> error "Should not be here"
+                                   _            -> error "Should not be here"
+
+data ConcatBranch = LEFT | RIGHT
+                    deriving (Show, Eq)
 
 -- Given a Doc, return a tuple 
 -- (The Document with the longest line
 -- , number of chars in the longest line
--- , remaining chars that has not been terminated yet)
+-- , remaining chars that has not been terminated yet
+-- , trace to the Line Doc)
 -- When no Line found in the Doc, the 1st element of the tuple is Empty,
 -- and the number of chars in the longest line is 0.
-longestLine :: Doc -> (Doc, Int, Int)
-longestLine Empty           = (Empty, 0, 0)
-longestLine (Char c)        = (Empty, 0, 1)
-longestLine (Text s)        = (Empty, 0, length s)
-longestLine Line            = (Line, 0, 0)
-longestLine (a `Concat` b)  = fromConcat (longestLine a) (longestLine b)
-    where fromConcat (Empty, _, nra) (Empty, _, nrb) = (Empty, 0, nra + nrb)
-          fromConcat (Empty, _, nra) (db, nb, nrb)   = (db, nra + nb, nrb)
-          fromConcat (da, na, nra)   (Empty, _, nrb) = (da, na, nra + nrb)
-          fromConcat (da, na, nra)   (db, nb, nrb)   = let newNb = nra + nb
-                                                       in if na > newNb
-                                                          then (da, na, nrb)
-                                                          else (db, newNb, nrb)
-longestLine (_ `Union` b)   = longestLine b
+longestLine :: Doc -> (Doc, Int, Int, [ConcatBranch])
+longestLine d = (ad, dw, rw, reverse ds)
+    where (ad, dw, rw, ds) = helper d []
+          helper Empty    ds        = (Empty, 0, 0, ds)
+          helper (Char c) ds        = (Empty, 0, 1, ds)
+          helper (Text s) ds        = (Empty, 0, length s, ds)
+          helper Line     ds        = (Line, 0, 0, ds)
+          helper (a `Concat` b) ds  = fromConcat (helper a (LEFT : ds)) (helper b (RIGHT : ds))
+              where fromConcat (Empty, _, nra, _) (Empty, _, nrb, bds) = (Empty, 0, nra + nrb, bds)
+                    fromConcat (Empty, _, nra, _) (db, nb, nrb, bds)   = (db, nra + nb, nrb, bds)
+                    fromConcat (da, na, nra, ads) (Empty, _, nrb, _)   = (da, na, nra + nrb, ads)
+                    fromConcat (da, na, nra, ads) (db, nb, nrb, bds)   = let newNb = nra + nb
+                                                                         in if na >= newNb
+                                                                            then (da, na, nrb, ads)
+                                                                            else (db, newNb, nrb, bds)
+          helper (_ `Union` b) ds   = helper b (RIGHT : ds)
