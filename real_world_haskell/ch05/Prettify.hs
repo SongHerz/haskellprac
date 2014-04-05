@@ -120,7 +120,7 @@ fill width x        = if longestWidth >= width || remainWidth >= width
                          else if remainWidth >=longestWidth
                               then x <> text (replicate (width - remainWidth) ' ')
                               else replaceWithLongest x ds
-                      where (longest, longestWidth, remainWidth, ds) = longestLine x
+                      where (_, longestWidth, remainWidth, ds) = longestLine x
                             replaceWithLongest Line [] = text (replicate (width - longestWidth) ' ') <> Line
                             replaceWithLongest _    [] = error "Should not be here"
                             replaceWithLongest d (ad : ds) =
