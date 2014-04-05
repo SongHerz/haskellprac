@@ -12,8 +12,6 @@ module Prettify
       pretty
     ) where
 
-import SimpleJSON
-
 data Doc = Empty
          | Char Char
          | Text String
@@ -110,3 +108,43 @@ w `fits` ""        = True
 w `fits` ('\n':_)  = True
 w `fits` (c:cs)    = (w-1) `fits` cs
 
+-- ex1 on page 130
+-- I think, the meaning of the exercise is to find the longest line of a Doc,
+-- and append spaces to that line, if the line is shorter than required.
+-- Assume all new lines are represented by Line, and no char or text contains new line.
+fill :: Int -> Doc -> Doc
+fill width Empty    = Empty
+fill width x        = if longestWidth >= width || remainWidth >= width
+                         then x
+                         else if remainWidth >=longestWidth
+                              then x <> text (replicate (width - remainWidth) ' ')
+                              else replaceWithLongest x
+                      where (longest, longestWidth, remainWidth) = longestLine x
+                            replaceWithLongest x =
+                               if x == longest
+                               then x <> text (replicate (width - longestWidth) ' ')
+                               else case x of
+                                       a `Concat` b -> (replaceWithLongest a) `Concat` (replaceWithLongest b)
+                                       a `Union` b  -> a `Union` (replaceWithLongest b)
+                                       _            -> replaceWithLongest x
+
+-- Given a Doc, return a tuple 
+-- (The Document with the longest line
+-- , number of chars in the longest line
+-- , remaining chars that has not been terminated yet)
+-- When no Line found in the Doc, the 1st element of the tuple is Empty,
+-- and the number of chars in the longest line is 0.
+longestLine :: Doc -> (Doc, Int, Int)
+longestLine Empty           = (Empty, 0, 0)
+longestLine (Char c)        = (Empty, 0, 1)
+longestLine (Text s)        = (Empty, 0, length s)
+longestLine Line            = (Line, 0, 0)
+longestLine (a `Concat` b)  = fromConcat (longestLine a) (longestLine b)
+    where fromConcat (Empty, _, nra) (Empty, _, nrb) = (Empty, 0, nra + nrb)
+          fromConcat (Empty, _, nra) (db, nb, nrb)   = (db, nra + nb, nrb)
+          fromConcat (da, na, nra)   (Empty, _, nrb) = (da, na, nra + nrb)
+          fromConcat (da, na, nra)   (db, nb, nrb)   = let newNb = nra + nb
+                                                       in if na > newNb
+                                                          then (da, na, nrb)
+                                                          else (db, newNb, nrb)
+longestLine (_ `Union` b)   = longestLine b
