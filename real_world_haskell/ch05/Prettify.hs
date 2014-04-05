@@ -9,7 +9,8 @@ module Prettify
       hcat,
       punctuate,
       compact,
-      pretty
+      pretty,
+      fill
     ) where
 
 data Doc = Empty
@@ -120,13 +121,13 @@ fill width x        = if longestWidth >= width || remainWidth >= width
                               then x <> text (replicate (width - remainWidth) ' ')
                               else replaceWithLongest x
                       where (longest, longestWidth, remainWidth) = longestLine x
-                            replaceWithLongest x =
-                               if x == longest
-                               then x <> text (replicate (width - longestWidth) ' ')
-                               else case x of
+                            replaceWithLongest d =
+                               if d == longest
+                               then d <> text (replicate (width - longestWidth) ' ')
+                               else case d of
                                        a `Concat` b -> (replaceWithLongest a) `Concat` (replaceWithLongest b)
                                        a `Union` b  -> a `Union` (replaceWithLongest b)
-                                       _            -> replaceWithLongest x
+                                       _            -> d
 
 -- Given a Doc, return a tuple 
 -- (The Document with the longest line
