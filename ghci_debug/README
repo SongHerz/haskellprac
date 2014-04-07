@@ -1,0 +1,2 @@
+This is on how to debug with GHCi.
+The qsort example is from http://www.haskell.org/ghc/docs/7.4.1/html/users_guide/ghci-debugger.html
