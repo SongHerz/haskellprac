@@ -143,17 +143,25 @@ data ConcatBranch = LEFT | RIGHT
 -- and the number of chars in the longest line is 0.
 longestLine :: Doc -> (Doc, Int, Int, [ConcatBranch])
 longestLine d = (ad, dw, rw, reverse ds)
-    where (ad, dw, rw, ds) = helper d []
-          helper Empty    ds        = (Empty, 0, 0, ds)
-          helper (Char c) ds        = (Empty, 0, 1, ds)
-          helper (Text s) ds        = (Empty, 0, length s, ds)
-          helper Line     ds        = (Line, 0, 0, ds)
-          helper (a `Concat` b) ds  = fromConcat (helper a (LEFT : ds)) (helper b (RIGHT : ds))
-              where fromConcat (Empty, _, nra, _) (Empty, _, nrb, bds) = (Empty, 0, nra + nrb, bds)
-                    fromConcat (Empty, _, nra, _) (db, nb, nrb, bds)   = (db, nra + nb, nrb, bds)
-                    fromConcat (da, na, nra, ads) (Empty, _, nrb, _)   = (da, na, nra + nrb, ads)
-                    fromConcat (da, na, nra, ads) (db, nb, nrb, bds)   = let newNb = nra + nb
-                                                                         in if na >= newNb
-                                                                            then (da, na, nrb, ads)
-                                                                            else (db, newNb, nrb, bds)
-          helper (_ `Union` b) ds   = helper b (RIGHT : ds)
+    where (ad, dw, rw, ds) = helper 0 d []
+          -- The helper function takes:
+          -- number of remaining chars, a Doc, and a trace
+          -- The number of remaining chars are on the left side of the Doc
+          --         Concat Doc
+          --            ^
+          --      left  |
+          --            |      left
+          --        SomeDoc0 <------- SomeDoc1
+          helper n Empty    ds        = (Empty, 0, n, ds)
+          helper n (Char c) ds        = (Empty, 0, n + 1, ds)
+          helper n (Text s) ds        = (Empty, 0, n + length s, ds)
+          helper n Line     ds        = (Line,  n, 0, ds)
+          helper n (a `Concat` b) ds  = fromConcat (da, na, nra, ads) (db, nb, nrb, bds)
+              where (da, na, nra, ads) = helper n a (LEFT : ds)
+                    (db, nb, nrb, bds) = helper (nra) b (RIGHT : ds)
+                    fromConcat (Empty, _, _, _) (db, nb, nrb, bds) = (db, nb, nrb, bds)
+                    fromConcat (da, na, _, ads) (Empty, _, nrb, _) = (da, na, nrb, ads)
+                    fromConcat (da, na, _, ads) (db, nb, nrb, bds) = if na >= nb
+                                                                     then (da, na, nrb, ads)
+                                                                     else (db, nb, nrb, bds)
+          helper n (_ `Union` b) ds   = helper n b (RIGHT : ds)
