@@ -8,8 +8,8 @@ import Data.Char (ord)
 import Data.Bits (shiftR, (.&.))
 import SimpleJSON (JValue(..))
 import Prettify (Doc, (<>), char, double, text, fsep, hcat, punctuate,
-                -- Re-export compact and pretty functions from Prettify
-                compact, pretty)
+                -- Re-export compact, pretty and pretty' functions from Prettify
+                compact, pretty, pretty')
 
 renderJValue :: JValue -> Doc
 renderJValue (JBool True)   = text "true"
