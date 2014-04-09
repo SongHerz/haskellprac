@@ -10,7 +10,7 @@ module Prettify
       punctuate,
       compact,
       pretty,
-      pretty',
+      nest,
       fill
     ) where
 
@@ -114,15 +114,15 @@ w `fits` (c:cs)    = (w-1) `fits` cs
 -- ex2 on page 130
 -- This function is with indentation support.
 -- indent is one level indentation width
-pretty' :: Int -> Doc -> String
-pretty' indent x = best "" [x]
+nest :: Int -> Doc -> String
+nest indent x = best "" [x]
     where indentation = replicate indent ' '
           best ind (d:ds) =
               case d of
                 Empty           -> best ind ds
                 Char c          -> c : best (newInd c ind) ds
                 Text s          -> s ++ best (newIndStr s ind) ds
-                Line            -> ('\n' : ind) ++ best ind ds
+                Line            -> ('\n' : newIndAfterLine ind ds) ++ best ind ds
                 a `Concat` b    -> best ind (a:b:ds)
                 _ `Union` b     -> best ind (b:ds)
           best _ _ = ""
@@ -139,6 +139,19 @@ pretty' indent x = best "" [x]
                        | otherwise     = old
 
           newIndStr s old = foldr newInd old s
+
+          -- get new indent after the new line
+          -- by looking ahead further Docs.
+          newIndAfterLine old (d:ds) =
+                case d of
+                    Empty               -> old
+                    Char c              -> newInd c old
+                    Text s | null s     -> newIndAfterLine old ds
+                           | otherwise  -> newInd (head s) old
+                    Line                -> old
+                    a `Concat` b        -> newIndAfterLine old (a:b:ds)
+                    _ `Union` b         -> newIndAfterLine old (b:ds)
+            
 
 -- ex1 on page 130
 -- I think, the meaning of the exercise is to find the longest line of a Doc,
