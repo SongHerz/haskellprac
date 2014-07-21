@@ -7,3 +7,10 @@ lastButOne xs = if length xs < 2
                       then lastButOne (tail xs)
                       -- length xs == 2
                       else head xs)
+
+-- Pattern match version
+lastButOne' :: [a] -> a
+lastButOne' []      = undefined
+lastButOne' [a]     = undefined
+lastButOne' [a,b]   = a
+lastButOne' xs      = lastButOne' $ tail xs
