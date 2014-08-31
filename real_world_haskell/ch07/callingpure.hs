@@ -1,6 +1,6 @@
 name2reply :: String -> String
 name2reply name =
-    "Pleased to meed you, " ++ name ++ ".\n" ++
+    "Pleased to meet you, " ++ name ++ ".\n" ++
     "Your name contains " ++ charcount ++ " characters."
     where charcount = show $ length name
 
