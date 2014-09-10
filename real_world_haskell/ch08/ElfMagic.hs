@@ -1,7 +1,7 @@
 import qualified Data.ByteString.Lazy as L
 
 hasElfMagic :: L.ByteString -> Bool
-hasElfMagic content = L.take 4 content == elfMagic
+hasElfMagic content = L.take (L.length elfMagic) content == elfMagic
     where elfMagic = L.pack [0x7f, 0x45, 0x4c, 0x46]
 
 
