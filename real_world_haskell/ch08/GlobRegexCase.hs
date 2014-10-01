@@ -38,15 +38,13 @@ escape c | c `elem` regexChars = '\\' : [c]
 -- letter, ignore_case, in_char_class -> return value
 letterRegex :: Char -> Bool -> Bool -> String
 letterRegex c False _     = [c]
-letterRegex c True  True  = mayAlphaULPair c
-letterRegex c True  False
-    | isAlpha c = '[' : mayAlphaULPair c ++ "]"
-    | otherwise = [c]
-
-mayAlphaULPair :: Char -> String
-mayAlphaULPair c
+letterRegex c True  True
     | isAlpha c = [toUpper c, toLower c]
     | otherwise = [c]
+letterRegex c True  False
+    | isAlpha c = ['[', toUpper c, toLower c, ']']
+    | otherwise = [c]
+
 
 
 charClass :: String -> Bool -> String
