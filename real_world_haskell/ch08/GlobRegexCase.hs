@@ -1,3 +1,9 @@
+{-
+ - This implementation is relative complex.
+ - As this turns a alpha into a pair of upper/lower cases.
+ - A relative simple implementation is to convert the string and the pattern
+ - to lower or upper case first, then match.
+ -}
 module GolbRegex
     (
         globToRegex
