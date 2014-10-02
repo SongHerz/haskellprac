@@ -1,17 +1,53 @@
 module GlobPortable (namesMatching) where
 
+import Data.List (isInfixOf)
 import System.Directory (doesDirectoryExist, doesFileExist,
                          getCurrentDirectory, getDirectoryContents)
 import System.FilePath (pathSeparator,
                         dropTrailingPathSeparator, splitFileName, (</>))
 
 import Control.Exception (handle)
-import Control.Monad (forM)
+import Control.Monad (forM, filterM)
 import qualified GlobRegexCase as GRC (matchesGlob)
 
 isPattern :: String -> Bool
 isPattern = any (`elem` "[*?")
 
+-- Check if a string contains "**" pattern
+isDeepSearchPattern :: String -> Bool
+isDeepSearchPattern = isInfixOf "**"
+
+-- Convert "**" in a pattern to one "*"
+-- FIXME: I have to check if this is necessary,
+--        but it seems we'd better do this.
+normalizePattern :: String -> String
+normalizePattern ('*':'*':xs) = normalizePattern ('*':xs)
+normalizePattern (x : xs)     = x : normalizePattern xs
+normalizePattern []           = []
+
+-- Return a list that contains the directory
+-- and all its sub-directories recursively.
+allSubDirs :: FilePath -> IO [FilePath]
+allSubDirs root = do
+    subDirs <- allSubDirs' root
+    return (root : subDirs)
+
+
+-- This will not add root to the final dir list
+allSubDirs' :: FilePath -> IO [FilePath]
+allSubDirs' root = do
+    entries <- getDirectoryContents root
+    let entryPaths = map (root </>) entries
+    -- We should also filter out "." and ".."
+    dirs <- filterM (\dirPath -> do
+                            let isDotDir =(snd.splitFileName $ dirPath) `elem` [".", ".."]
+                            isDir <- doesDirectoryExist dirPath
+                            return $ not isDotDir && isDir)
+                    entryPaths
+    subDirsList <- forM dirs allSubDirs'
+    return $ concat ( dirs : subDirsList)
+
+-- Only support glob pattern, and '**.c'
 namesMatching pat
     | not (isPattern pat) = do
         exists <- doesNameExist pat
