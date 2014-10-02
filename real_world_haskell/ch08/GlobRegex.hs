@@ -1,4 +1,4 @@
-module GolbRegex
+module GlobRegex
     (
         globToRegex
       , matchesGlob
