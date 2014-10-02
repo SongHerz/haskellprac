@@ -1,12 +1,13 @@
-module Glob (namesMatching) where
+module GlobPortable (namesMatching) where
 
 import System.Directory (doesDirectoryExist, doesFileExist,
                          getCurrentDirectory, getDirectoryContents)
-import System.FilePath (dropTrailingPathSeparator, splitFileName, (</>))
+import System.FilePath (pathSeparator,
+                        dropTrailingPathSeparator, splitFileName, (</>))
 
 import Control.Exception (handle)
 import Control.Monad (forM)
-import GlobRegex (matchesGlob)
+import qualified GlobRegexCase as GRC (matchesGlob)
 
 isPattern :: String -> Bool
 isPattern = any (`elem` "[*?")
@@ -55,6 +56,9 @@ listMatches dirName pat = do
         let names' = if isHidden pat
                      then filter isHidden names
                      else filter (not . isHidden) names
+        let matchesGlob = if pathSeparator == '/'
+                          then (\name pat -> GRC.matchesGlob name pat False)
+                          else (\name pat -> GRC.matchesGlob name pat True)
         return $ filter (`matchesGlob` pat) names'
 
 

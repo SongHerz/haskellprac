@@ -4,7 +4,7 @@
  - A relative simple implementation is to convert the string and the pattern
  - to lower or upper case first, then match.
  -}
-module GolbRegex
+module GlobRegexCase
     (
         globToRegex
       , matchesGlob
