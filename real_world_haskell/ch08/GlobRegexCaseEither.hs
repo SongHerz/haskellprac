@@ -8,6 +8,7 @@ module GlobRegexCaseEither
     (
         globToRegex
       , matchesGlob
+      , GlobError
     ) where
 
 import Data.Char (toUpper, toLower, isAlpha)
