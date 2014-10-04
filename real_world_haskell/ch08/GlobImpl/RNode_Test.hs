@@ -19,4 +19,3 @@ createTest (name, message, pattern, expectResult) =
 
 tests = TestLabel "RNode Tests" $ TestList $ map createTest tests'
 
-main = runTestTT tests
