@@ -1,7 +1,5 @@
-{-
- - This is a glob regexpr implementated by myself.
- -}
-module GlobImpl (matchesGlob) where
+-- A glob regex is converted to [RNode] first
+module RNode (RNode, preProcess) where
 
 data RNode = RStar          -- *
            | RQuestion      -- ?
@@ -10,10 +8,8 @@ data RNode = RStar          -- *
                 inclusive   :: Bool
               , chars       :: [Char]
              }
-           deriving (Show)
+           deriving (Eq, Show)
 
-matchesGlob :: String -> String -> Bool
-matchesGlob name pat = True
 
 
 isRegexChar :: Char -> Bool
