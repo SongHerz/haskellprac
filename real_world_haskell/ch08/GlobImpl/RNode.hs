@@ -34,11 +34,12 @@ preProcClass xs       = (   RClass { inclusive = not isExclusive,
                           , remaining)
                         where isExclusive = not (null xs) && head xs == '!'
                               xs' = if isExclusive then tail xs else xs
-                              (charSet, remaining) = preProcClass' xs' [] 
+                              (remaining, charSet) = preProcClass' xs' [] 
 
 -- From a string get char list of a character class
-preProcClass' :: String -> CharSet -> (CharSet, String)
-preProcClass' (']':xs) cs = (cs, xs)
-preProcClass' (c:xs)   cs = preProcClass' xs (c:cs)
-preProcClass' []       _  = error "unterminated character class"
+preProcClass' :: String -> CharSet -> (String, CharSet)
+preProcClass' (']':xs) cs    = (xs, cs)
+preProcClass' ('\\':c:xs) cs = preProcClass' xs (c:cs)
+preProcClass' (c:xs)   cs    = preProcClass' xs (c:cs)
+preProcClass' []       _     = error "unterminated character class"
 

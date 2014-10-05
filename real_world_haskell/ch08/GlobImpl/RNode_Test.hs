@@ -19,7 +19,15 @@ tests' = [
     ("Char, then question", "", "a?", [RChar 'a', RQuestion]),
     ("Star, then question", "", "*?", [RStar, RQuestion]),
     ("Question, then star", "", "?*", [RQuestion, RStar]),
-    ("Escape sequences", "", "\\?\\*\\[\\a\\\\", [RChar '?', RChar '*', RChar '[', RChar 'a', RChar '\\'])
+    ("Escape sequences", "", "\\?\\*\\[\\a\\\\", [RChar '?', RChar '*', RChar '[', RChar 'a', RChar '\\']),
+    ("Empty inclusive character class", "", "[]", [RClass {inclusive = True, chars = ""}]),
+    ("Inclusive character class with only '['", "", "[[]", [RClass {inclusive = True, chars = "["}]),
+    ("Inclusive character class with only ']'", "", "[\\]]", [RClass {inclusive = True, chars = "]"}]),
+    ("Inclusive character class with only '!'", "", "[\\!]", [RClass {inclusive = True, chars = "!"}]),
+    ("Inclusive character class with only '\\'", "", "[\\\\]", [RClass {inclusive = True, chars = "\\"}]),
+    ("Inclusive character class with ']' and '!' 0", "", "[\\]\\!]", [RClass {inclusive = True, chars = "]!"}]),
+    ("Inclusive character class with ']' and '!' 1", "", "[a\\]!]", [RClass {inclusive = True, chars = "a]!"}]),
+    ("Empty exclusive character class", "", "[!]", [RClass {inclusive = False, chars = ""}])
 
     ]
 
@@ -27,7 +35,7 @@ createTest :: (String, String, String, [RNode]) -> Test
 createTest (name, message, pattern, expectResult) = 
     TestLabel name aTest
     where aTest = TestCase $
-                  assertEqual message (preProcess pattern) expectResult
+                  assertEqual message expectResult (preProcess pattern)
 
      
 
