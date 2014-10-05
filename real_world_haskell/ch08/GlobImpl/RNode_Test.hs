@@ -57,7 +57,17 @@ tests' = [
     ("Inclusive normal range 9", "", "[a-\\cz]", [RClass {inclusive = True, chars = "abcz"}]),
     ("Inclusive range after range 0", "", "[a-\\cx-z]", [RClass {inclusive = True, chars = "abcxyz"}]),
     ("Inclusive range , char, then range", "", "[a-\\cfx-z]", [RClass {inclusive = True, chars = "abcfxyz"}]),
-    ("Exclusive with '-' 0", "", "[!-]", [RClass {inclusive = False, chars = "-"}])
+    ("Exclusive with '-' 0", "", "[!-]", [RClass {inclusive = False, chars = "-"}]),
+
+    -- Mix all stuff together
+    ("Mix", "", "?*abc*[A-D].[!0-9]t", [RQuestion,
+                                       RStar,
+                                       RChar 'a', RChar 'b', RChar 'c', 
+                                       RStar,
+                                       RClass {inclusive = True, chars = "ABCD"},
+                                       RChar '.',
+                                       RClass {inclusive = False, chars = ['0'..'9']},
+                                       RChar 't'])
 
     ]
 
