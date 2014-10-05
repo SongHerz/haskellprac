@@ -20,6 +20,7 @@ tests' = [
     ("Star, then question", "", "*?", [RStar, RQuestion]),
     ("Question, then star", "", "?*", [RQuestion, RStar]),
     ("Escape sequences", "", "\\?\\*\\[\\a\\\\", [RChar '?', RChar '*', RChar '[', RChar 'a', RChar '\\']),
+    -- Inclusive character class cases
     ("Empty inclusive character class", "", "[]", [RClass {inclusive = True, chars = ""}]),
     ("Inclusive character class with only '['", "", "[[]", [RClass {inclusive = True, chars = "["}]),
     ("Inclusive character class with only ']'", "", "[\\]]", [RClass {inclusive = True, chars = "]"}]),
@@ -27,7 +28,16 @@ tests' = [
     ("Inclusive character class with only '\\'", "", "[\\\\]", [RClass {inclusive = True, chars = "\\"}]),
     ("Inclusive character class with ']' and '!' 0", "", "[\\]\\!]", [RClass {inclusive = True, chars = "]!"}]),
     ("Inclusive character class with ']' and '!' 1", "", "[a\\]!]", [RClass {inclusive = True, chars = "a]!"}]),
-    ("Empty exclusive character class", "", "[!]", [RClass {inclusive = False, chars = ""}])
+    ("Inclusive character class with normal chars", "", "[abc]", [RClass {inclusive = True, chars = "abc"}]),
+    -- Exclusive character class cases
+    ("Empty exclusive character class", "", "[!]", [RClass {inclusive = False, chars = ""}]),
+    ("Exclusive character class with only '['", "", "[![]", [RClass {inclusive = False, chars = "["}]),
+    ("Exclusive character class with only ']'", "", "[!\\]]", [RClass {inclusive = False, chars = "]"}]),
+    ("Exclusive character class with only '!'", "", "[!!]", [RClass {inclusive = False, chars = "!"}]),
+    ("Exclusive character class with only '\\'", "", "[!\\\\]", [RClass {inclusive = False, chars = "\\"}]),
+    ("Exclusive character class with ']' and '!' 0", "", "[!\\]\\!]", [RClass {inclusive = False, chars = "]!"}]),
+    ("Exclusive character class with ']' and '!' 1", "", "[!a\\]!]", [RClass {inclusive = False, chars = "a]!"}]),
+    ("Exclusive character class with normal chars", "", "[!abc]", [RClass {inclusive = False, chars = "abc"}])
 
     ]
 
