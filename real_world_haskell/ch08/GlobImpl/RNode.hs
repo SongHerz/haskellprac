@@ -1,5 +1,5 @@
 -- A glob regex is converted to [RNode] first
-module RNode (RNode, preProcess) where
+module RNode (RNode(..), preProcess) where
 
 data RNode = RStar          -- *
            | RQuestion      -- ?

@@ -4,9 +4,23 @@ import RNode
 import Test.HUnit
 
 
+-- [(case name, case message prefix, pattern, [RNode])]
 tests' :: [(String, String, String, [RNode])]
 tests' = [
-    ("Empty Pattern", "", "", [])
+    ("Empty pattern", "", "", []),
+    ("Star", "", "*", [RStar]),
+    ("Question mark", "", "?", [RQuestion]),
+    ("One char", "", "a", [RChar 'a']),
+    ("Two chars", "", "ab", [RChar 'a', RChar 'b']),
+    ("Three chars", "", "abc", [RChar 'a', RChar 'b', RChar 'c']),
+    ("Star, then char", "", "*a", [RStar, RChar 'a']),
+    ("Char, then star", "", "a*", [RChar 'a', RStar]),
+    ("Question, then char", "", "?a", [RQuestion, RChar 'a']),
+    ("Char, then question", "", "a?", [RChar 'a', RQuestion]),
+    ("Star, then question", "", "*?", [RStar, RQuestion]),
+    ("Question, then star", "", "?*", [RQuestion, RStar]),
+    ("Escape sequences", "", "\\?\\*\\[\\a\\\\", [RChar '?', RChar '*', RChar '[', RChar 'a', RChar '\\'])
+
     ]
 
 createTest :: (String, String, String, [RNode]) -> Test
