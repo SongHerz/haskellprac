@@ -39,7 +39,9 @@ preProcClass xs       = (   RClass { inclusive = not isExclusive,
 -- From a string get char list of a character class
 preProcClass' :: String -> CharSet -> (String, CharSet)
 preProcClass' (']':xs) cs    = (xs, cs)
-preProcClass' ('\\':c:xs) cs = preProcClass' xs (c:cs)
-preProcClass' (c:xs)   cs    = preProcClass' xs (c:cs)
+preProcClass' ('\\':c:xs) cs = (xs', c:cs')
+                               where (xs', cs') = preProcClass' xs cs
+preProcClass' (c:xs)   cs    = (xs', c:cs')
+                               where (xs', cs') = preProcClass' xs cs
 preProcClass' []       _     = error "unterminated character class"
 
