@@ -110,3 +110,13 @@ myTest2 = (liftPath takeExtension `equalP` ".cpp") `andP`
           (sizeP `greaterP` (1024 * 128))
 
 
+infix 4 ==?
+infixr 3 &&?
+infix 4 >?
+
+(==?) = equalP
+(&&?) = andP
+(>?)  = greaterP
+
+myTest4 :: InfoP Bool
+myTest4 = liftPath takeExtension ==? ".cpp" &&? sizeP >? (1024 * 128)
