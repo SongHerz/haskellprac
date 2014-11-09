@@ -1,4 +1,5 @@
 import Data.List (sortBy)
+import Data.Ord (comparing)
 import Control.Monad (liftM, forM, mapM)
 import Control.Exception (handle, bracket)
 import System.FilePath ((</>))
@@ -47,9 +48,28 @@ getInfo path = do
 {-
  - Exercise 1. Page 228.
  - Traverse a path in reverse alphabetic order.
+ - Use: traverse reverseAlphabeticPathOrder path
  -}
-reverseAlphabeticTraverse path = traverse (sortBy rPathCmp) path
-    where rPathCmp a b = reverseOrd $ compare (infoPath a) (infoPath b)
-          reverseOrd EQ = EQ
-          reverseOrd GT = LT
-          reverseOrd LT = GT
+-- reverseAlphabeticPathOrder ::  [Info] -> [Info]
+-- reverseAlphabeticPathOrder = sortBy rPathCmp
+--     where rPathCmp a b = reverseOrd $ compare (infoPath a) (infoPath b)
+--           reverseOrd EQ = EQ
+--           reverseOrd GT = LT
+--           reverseOrd LT = GT
+
+{-
+ - There is another implementation of Exercise 1.
+ - This is more elegant from:
+ - http://book.realworldhaskell.org/read/io-case-study-a-library-for-searching-the-filesystem.html
+ - Frederic Dumont 2009-04-13
+ -}
+reverseAlphabeticPathOrder ::  [Info] -> [Info]
+reverseAlphabeticPathOrder = sortBy (flip $ comparing infoPath)
+
+{-
+ - Exercise 2. Page 228.
+ - Put the parent last.
+ - Use: traverse childrenFirstOrder path
+ -}
+childrenFirstOrder ::  [Info] -> [Info]
+childrenFirstOrder infos = tail infos ++ (head infos : [])
