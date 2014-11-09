@@ -136,3 +136,12 @@ infix 4 <?
 
 (<?) :: (Ord a) => InfoP a -> a -> InfoP Bool
 (<?)  = lesserP
+
+
+{-
+ - Exercise 4. Page 228.
+ -}
+traverse' :: Predicate -> Predicate -> FilePath -> IO [Info]
+traverse' predt predo path = do
+    infos <- traverse (filter predt) path
+    return $ filter predo infos
