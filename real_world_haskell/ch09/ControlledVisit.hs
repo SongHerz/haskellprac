@@ -73,3 +73,66 @@ reverseAlphabeticPathOrder = sortBy (flip $ comparing infoPath)
  -}
 childrenFirstOrder ::  [Info] -> [Info]
 childrenFirstOrder infos = tail infos ++ (head infos : [])
+
+
+{-
+ - Exercise 3. Page 228.
+ -}
+type InfoP a = Info -> a
+type Predicate = InfoP Bool
+
+pathP :: Info -> FilePath
+pathP info = infoPath info
+
+sizeP :: Info -> Integer
+sizeP info = case infoSize info of
+                Just size -> size
+                Nothing   -> -1
+
+equalP :: (Eq a) => InfoP a -> a -> InfoP Bool
+equalP f k = \info -> f info == k
+
+liftP :: (a -> b -> c) -> InfoP a -> b -> InfoP c
+liftP q f k = \info -> f info `q` k
+
+greaterP, lesserP :: (Ord a) => InfoP a -> a -> InfoP Bool
+greaterP = liftP (>)
+lesserP  = liftP (<)
+
+
+simpleAndP :: InfoP Bool -> InfoP Bool -> InfoP Bool
+simpleAndP f g = \info -> f info && g info
+
+liftP2 :: (a -> b -> c) -> InfoP a -> InfoP b -> InfoP c
+liftP2 q f g = \info -> f info `q` g info
+
+andP = liftP2 (&&)
+orP = liftP2 (||)
+
+constP :: a -> InfoP a
+constP k = \_ -> k
+
+-- Rewrite liftP by liftP2
+liftP' :: (a -> b -> c) -> InfoP a -> b -> InfoP c
+liftP' q f k = liftP2 q f (constP k)
+
+infix 4 ==?
+infixr 3 &&?
+infixr 2 ||?
+infix 4 >?
+infix 4 <?
+
+(==?) :: (Eq a) => InfoP a -> a -> InfoP Bool
+(==?) = equalP
+
+(&&?) :: InfoP Bool -> InfoP Bool -> InfoP Bool
+(&&?) = andP
+
+(||?) :: InfoP Bool -> InfoP Bool -> InfoP Bool
+(||?) = orP
+
+(>?) :: (Ord a) => InfoP a -> a -> InfoP Bool
+(>?)  = greaterP
+
+(<?) :: (Ord a) => InfoP a -> a -> InfoP Bool
+(<?)  = lesserP
