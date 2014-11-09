@@ -1,0 +1,8 @@
+From: http://stackoverflow.com/questions/20622390/is-haskellmode-vim-dead
+    
+The author of the question said:
+Just in case someone stumbles over this question in the future. My current (haskell specific) vim configuration contains these plugins: ghcmod-vim (type exploring), neco-ghc (auto completion), syntactic (error highlighting), vim2hs (misc utils) –  Florian Dec 17 '13 at 14:29 
+
+
+The author of haskellmode-vim does not maintain that vim plugin anymore.
+And I should try the plugins mentioned above.
