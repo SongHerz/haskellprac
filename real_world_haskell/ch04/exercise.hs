@@ -52,7 +52,20 @@ myTakeWhile' :: (a -> Bool) -> [a] -> [a]
 myTakeWhile' p xs = foldr step [] xs
     where step x acc
             | p x       = x : acc
+            -- It is important to assign [] here,
+            -- as this avoid unnecessary calculation for subsequent acc.
             | otherwise = []
+
+-- This implementation is BAD,
+-- because the list traversal cannot be terminated earilier.
+myTakeWhile'' :: (a -> Bool) -> [a] -> [a]
+myTakeWhile'' p xs = foldr step [] xs
+    where step x acc
+            | p x       = x : acc
+            -- [] should be assigned as myTakeWhile'.
+            -- This implementation is bad habit from Python experience :P
+            -- as reduce(...) of Python is actually foldl.
+            | otherwise = acc
 
 -- For ex8/9, on page 98
 -- The function eq should be an equality function.
