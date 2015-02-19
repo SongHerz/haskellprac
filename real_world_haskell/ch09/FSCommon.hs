@@ -1,7 +1,7 @@
-module FSCommon (
-    getUsefulContents,
-    Info(..),
-    getInfo
+module FSCommon (getUsefulContents
+                , Info(..)
+                , getInfo
+                , isDirectory
 ) where
 
 
@@ -36,3 +36,7 @@ getInfo path = do
     size <- maybeIO $ bracket (openFile path ReadMode) hClose hFileSize
     modified <- maybeIO $ getModificationTime path
     return $ Info path perms size modified
+
+
+isDirectory :: Info -> Bool
+isDirectory = maybe False searchable . infoPerms

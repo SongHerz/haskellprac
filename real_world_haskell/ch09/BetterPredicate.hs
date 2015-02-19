@@ -1,3 +1,7 @@
+module BetterPredicate ( InfoP
+                       , Predicate
+                       , betterFind) where
+
 import Control.Monad (forM, filterM)
 import System.Directory (Permissions(..), getModificationTime, getPermissions)
 import Data.Time.Clock (UTCTime(..))

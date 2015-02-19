@@ -8,7 +8,7 @@ import System.Directory (Permissions(..),
 import System.IO (IOMode(ReadMode), openFile, hClose, hFileSize)
 import Data.Time.Clock (UTCTime)
 
-import FSCommon (getUsefulContents, Info(..), getInfo)
+import FSCommon (getUsefulContents, Info(..), getInfo, isDirectory)
 
 traverse :: ([Info] -> [Info]) -> FilePath -> IO [Info]
 traverse order path = do
@@ -18,10 +18,6 @@ traverse order path = do
         if isDirectory info && infoPath info /= path
             then traverse order (infoPath info)
             else return [info]
-
-
-isDirectory :: Info -> Bool
-isDirectory = maybe False searchable . infoPerms
 
 
 {-
