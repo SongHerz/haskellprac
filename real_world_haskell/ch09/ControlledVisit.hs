@@ -59,6 +59,11 @@ type Predicate = InfoP Bool
 pathP :: Info -> FilePath
 pathP info = infoPath info
 
+ownerP :: Info -> String
+ownerP info = case infoOwner info of
+                  Just owner -> owner
+                  Nothing    -> ""
+
 sizeP :: Info -> Integer
 sizeP info = case infoSize info of
                 Just size -> size
