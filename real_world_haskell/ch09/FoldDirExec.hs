@@ -7,6 +7,30 @@
  - If entries traversal is to be altered, the order function needs to see
  - all entries before determining the traversal order.
  - And exec 1 and 2 are not done at all.
+ -
+ - For exec 3, I think the intention is to write some simple iterators,
+ - and complex iterators can be composed by simple ones.
+ - And this file is to solve exec 3.
+ -
+ - As an Iterate a has 3 data constructors, it is meaningful to define only
+ - 'and'/'or' operations.
+ -
+ - Here is the truth table:
+ - it0   and  it1   =
+ - Done       Done       Done
+ - Done       Skip       Done
+ - Done       Continue   Done 
+ - Skip       Skip       Skip
+ - Skip       Continue   Skip
+ - Continue   Continue   Continue
+ -
+ - it0   or   it1   =
+ - Done       Done       Done
+ - Done       Skip       Skip
+ - Done       Continue   Continue
+ - Skip       Skip       Skip
+ - Skip       Continue   Continue
+ - Continue   Continue   Continue
 -}
 
 module FoldDirExec where
@@ -24,7 +48,34 @@ data Iterate seed = Done     { unwrap :: seed }
                   | Continue { unwrap :: seed }
                     deriving (Show)
 
+andIterate :: (Iterate a) -> (Iterate a) -> (Iterate a)
+-- Only the 1st done is returned.
+-- If seed of two iterates are both done  and not the same, there would be problem.
+andIterate done@(Done _) _ = done
+andIterate _ done@(Done _) = done
+andIterate skip@(Skip _) _ = skip
+andIterate _ skip@(Skip _) = skip
+andIterate cont@(Continue _) (Continue _) = cont
+
+orIterate :: (Iterate a) -> (Iterate a) -> (Iterate a)
+orIterate cont@(Continue _) _ = cont
+orIterate _ cont@(Continue _) = cont
+orIterate skip@(Skip _) _ = skip
+orIterate _ skip@(Skip _) = skip
+orIterate done@(Done _) (Done _) = done
+
 type Iterator seed = seed -> Info -> Iterate seed
+
+liftIterator :: ((Iterate a) -> (Iterate a) -> (Iterate a)) -> (Iterator a) -> (Iterator a) -> (Iterator a)
+liftIterator f it0 it1 = \seed info -> it0 seed info `f` it1 seed info
+
+andIterator = liftIterator andIterate
+orIterator = liftIterator orIterate
+
+infixr 3 &&?
+infixr 2 ||?
+(&&?) = andIterator
+(||?) = orIterator
 
 foldTree :: forall a. Iterator a -> a -> FilePath -> IO a
 
