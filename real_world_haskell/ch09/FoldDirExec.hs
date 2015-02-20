@@ -155,12 +155,32 @@ minSizeIteratorGenerator min paths info
     where path = infoPath info
 
 
+traverseFileLimitIteratorGenerator :: Integer -> Iterator [FilePath]
+traverseFileLimitIteratorGenerator lim paths info
+    | toInteger(length paths) >= lim
+        -- FIXME: This is not good, when lim is a large number.
+        = Done paths
+    | isDirectory info
+        = Continue paths
+    | otherwise
+        = Continue (path : paths) 
+    where path = infoPath info
+
 pngPics = extIteratorGenerator ".png"
 jpgPics = extIteratorGenerator ".jpg" 
 
 
+
 -- collect both png and jpg files
+-- Test ||?
 foldPngJpg = foldTree (pngPics ||? jpgPics) [] "/tmp/pics"
 
 -- collect png files and size should be >= 1
+-- Test &&?
 foldPngWithSizeConstrain = foldTree (pngPics &&? minSizeIteratorGenerator 1) [] "/tmp/"
+
+-- collect png files and size should be >= 1
+-- Test &&? and Done.
+foldPngWithFileNumLimit = foldTree (pngPics &&? traverseFileLimitIteratorGenerator 3) [] "/tmp/"
+
+-- FIXME: logic of iterator and/or not fully tested yet.
