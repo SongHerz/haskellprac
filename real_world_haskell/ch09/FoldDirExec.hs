@@ -90,24 +90,24 @@ foldTree iter initSeed path = do
         -- the type var 'a' in this signature is not 'a' in foldTree
         -- signature, and compiles with error.
         fold :: a -> FilePath -> IO (Iterate a)
-        fold seed subpath = getUsefulContents subpath >>= walk seed
+        fold seed subpath = getUsefulContents subpath >>= walk seed subpath
 
         -- Use the same type var 'a' as foldTree
-        walk :: a -> [FilePath] -> IO (Iterate a)
-        walk seed (name:names) = do
-            let path' = path </> name
+        walk :: a -> FilePath -> [FilePath] -> IO (Iterate a)
+        walk seed subpath (name:names) = do
+            let path' = subpath </> name
             info <- getInfo path'
             case iter seed info of
                 done@(Done _)   -> return done
-                Skip seed'      -> walk seed' names
+                Skip seed'      -> walk seed' subpath names
                 Continue seed'
                     | isDirectory info -> do
                         next <- fold seed' path'
                         case next of
                             done@(Done _)   -> return done
-                            seed''          -> walk (unwrap seed'') names
-                    | otherwise -> walk seed' names
-        walk seed _ = return (Continue seed)
+                            seed''          -> walk (unwrap seed'') subpath names
+                    | otherwise -> walk seed' subpath names
+        walk seed _ _ = return (Continue seed)
 
 
 atMostThreePictures :: Iterator [FilePath]
