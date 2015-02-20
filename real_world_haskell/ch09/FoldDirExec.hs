@@ -35,12 +35,14 @@
 
 module FoldDirExec where
 
+import Control.Monad (liftM)
 import Data.Char (toLower)
 import System.FilePath(
                       (</>)
                       , takeFileName
                       , takeExtension)
 
+import System.Directory (doesFileExist)
 import FSCommon (getUsefulContents, Info(..), getInfo, isDirectory)
 
 data Iterate seed = Done     { unwrap :: seed }
@@ -130,4 +132,35 @@ countDirectories count info =
               else count)
 
 
-        
+-- Iterators for testing
+extIteratorGenerator :: String -> Iterator [FilePath]
+extIteratorGenerator ext paths info
+    | isDirectory info
+        = Continue paths
+    | takeExtension path == ext
+        = Continue (path: paths)
+    | otherwise
+        = Skip paths
+    where path = infoPath info
+
+
+minSizeIteratorGenerator :: Integer -> Iterator [FilePath]
+minSizeIteratorGenerator min paths info
+    | isDirectory info
+        = Continue paths
+    | otherwise
+        = case liftM (>= min) (infoSize info) of
+              Just True -> Continue (path : paths)
+              _         -> Skip paths
+    where path = infoPath info
+
+
+pngPics = extIteratorGenerator ".png"
+jpgPics = extIteratorGenerator ".jpg" 
+
+
+-- collect both png and jpg files
+foldPngJpg = foldTree (pngPics ||? jpgPics) [] "/tmp/pics"
+
+-- collect png files and size should be >= 1
+foldPngWithSizeConstrain = foldTree (pngPics &&? minSizeIteratorGenerator 1) [] "/tmp/"
