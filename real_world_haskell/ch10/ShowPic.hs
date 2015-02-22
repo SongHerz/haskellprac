@@ -24,6 +24,8 @@ import PNM
 import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8)
 
+import System.Environment (getArgs)
+
 
 chunksOf :: Int -> L.ByteString -> [L.ByteString]
 chunksOf w bs = helper bs []
@@ -43,8 +45,10 @@ gm2pic gm = bitmapOfByteString (greyWidth gm) (greyHeight gm) (L.toStrict rgbaDa
           convert c = fromIntegral $ (255 *  toInteger c) `quot` (toInteger $ greyMax gm)
           rgbaData = L.concatMap (\w8 -> L.pack $ map convert [fromIntegral (greyMax gm), w8, w8, w8]) $ flipVertically (greyWidth gm) (greyData gm)
 
-main = do
-    mgm <- fstGreymap "baboon.pgm"
+
+showPic :: FilePath -> IO ()
+showPic path = do
+    mgm <- fstGreymap path
     let (width, height, pic) = case mgm of
                                   Nothing -> (0, 0, blank)
                                   Just gm -> (greyWidth gm, greyHeight gm, gm2pic gm)
@@ -52,3 +56,9 @@ main = do
     let dis = InWindow "Picture" (width , height) (10, 10)
     -- display dis black $ color white $ text "abc"
     display dis black $ pic
+
+main = do
+    args <- getArgs
+    case args of
+        [x] -> showPic x
+        _   -> putStrLn "Usage: app <pgm_file>"
