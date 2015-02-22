@@ -24,11 +24,24 @@ import PNM
 import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8)
 
+
+chunksOf :: Int -> L.ByteString -> [L.ByteString]
+chunksOf w bs = helper bs []
+    where helper s acc
+            | L.null s  = acc
+            | otherwise = let (part1, part2) = L.splitAt (fromIntegral w) s
+                          in (part1 : helper part2 acc)
+
+
+flipVertically :: Int -> L.ByteString -> L.ByteString
+flipVertically w bs = L.concat . reverse $ chunksOf w bs
+
+
 gm2pic :: Greymap -> Picture
 gm2pic gm = bitmapOfByteString (greyWidth gm) (greyHeight gm) (L.toStrict rgbaData) True
     where convert :: Word8 -> Word8
           convert c = fromIntegral $ (255 *  toInteger c) `quot` (toInteger $ greyMax gm)
-          rgbaData = L.concatMap (\w8 -> L.pack $ map convert [fromIntegral (greyMax gm), w8, w8, w8]) $ greyData gm
+          rgbaData = L.concatMap (\w8 -> L.pack $ map convert [fromIntegral (greyMax gm), w8, w8, w8]) $ flipVertically (greyWidth gm) (greyData gm)
 
 main = do
     mgm <- fstGreymap "baboon.pgm"
