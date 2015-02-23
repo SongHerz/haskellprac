@@ -55,6 +55,10 @@ getBytes n str = let count  = fromIntegral n
                     then Nothing
                     else Just both
 
+-- Remove leading spaces from the 2nd byte string
+skipSpace :: (a, L.ByteString) -> Maybe (a, L.ByteString)
+skipSpace (a, s) = Just (a, L8.dropWhile isSpace s)
+
 parseP5 :: L.ByteString -> Maybe (Greymap, L.ByteString)
 parseP5 s =
     case matchHeader (L8.pack "P5") s of
@@ -80,8 +84,32 @@ parseP5 s =
                                                         Just (Greymap width height maxGrey bitmap, s6)
 
 
+(>>?) :: Maybe a -> (a -> Maybe b) -> Maybe b
+Nothing >>? _ = Nothing
+Just v  >>? f = f v
+
+
+parseP5_take2 :: L.ByteString -> Maybe (Greymap, L.ByteString)
+parseP5_take2 s =
+    matchHeader (L8.pack "P5") s        >>?
+    \s -> skipSpace ((), s)             >>?
+    -- get width
+    (getNat . snd)                      >>?
+    skipSpace                           >>?
+    -- get height
+    \(width, s) -> getNat s             >>?
+    skipSpace                           >>?
+    -- get max grey
+    \(height, s) -> getNat s            >>?
+    -- skip the byte just after max grey
+    \(maxGrey, s) -> getBytes 1 s       >>?
+    -- get bitmap pixels
+    (getBytes (width * height) . snd)   >>?
+    \(bitmap, s) -> Just (Greymap width height maxGrey bitmap, s)
+
 
 fstGreymap :: FilePath -> IO (Maybe Greymap)
 fstGreymap path = do
     bytes <- L.readFile path
-    return $ fst `liftM` (parseP5 bytes)
+    -- return $ fst `liftM` (parseP5 bytes)
+    return $ fst `liftM` (parseP5_take2 bytes)

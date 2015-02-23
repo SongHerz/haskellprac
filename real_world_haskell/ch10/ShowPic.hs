@@ -54,6 +54,8 @@ showPic path = do
                                   Just gm -> (greyWidth gm, greyHeight gm, gm2pic gm)
 
     let dis = InWindow "Picture" (width , height) (10, 10)
+    putStrLn $ "width: " ++ show width
+    putStrLn $ "height: " ++ show height
     -- display dis black $ color white $ text "abc"
     display dis black $ pic
 
