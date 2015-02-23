@@ -35,20 +35,18 @@ matchHeader prefix str
 -}
 
 matchHeader prefix str
-    | prefix `L8.isPrefixOf` str1
-        = Just (L8.drop (L.length prefix) str1)
+    | prefix `L8.isPrefixOf` str
+        = Just (L8.drop (L.length prefix) str)
     | otherwise
         = Nothing
-    where str1 =  L8.dropWhile isSpace str
 
 -- "nat" here is short for "natural number"
 getNat :: L.ByteString -> Maybe (Int, L.ByteString)
-getNat s = case L8.readInt s1 of
+getNat s = case L8.readInt s of
                Nothing -> Nothing
                Just (num, rest)
                 | num <= 0  -> Nothing
                 | otherwise -> Just(num, rest)
-            where s1 = L8.dropWhile isSpace s
 
 getBytes :: Int -> L.ByteString -> Maybe (L.ByteString, L.ByteString)
 getBytes n str = let count  = fromIntegral n
@@ -58,18 +56,17 @@ getBytes n str = let count  = fromIntegral n
                     else Just both
 
 parseP5 :: L.ByteString -> Maybe (Greymap, L.ByteString)
-
 parseP5 s =
     case matchHeader (L8.pack "P5") s of
         Nothing -> Nothing
         Just s1 ->
-            case getNat s1 of
+            case getNat (L8.dropWhile isSpace s1) of
                 Nothing -> Nothing
                 Just (width, s2) ->
-                    case getNat s2 of
+                    case getNat (L8.dropWhile isSpace s2) of
                         Nothing -> Nothing
                         Just (height, s3) ->
-                            case getNat s3 of
+                            case getNat (L8.dropWhile isSpace s3) of
                                 Nothing -> Nothing
                                 Just (maxGrey, s4)
                                     | maxGrey > 255 -> Nothing
