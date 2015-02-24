@@ -21,6 +21,7 @@
 
 import Graphics.Gloss
 import PNM
+import Greymap (Greymap(..))
 import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8)
 
