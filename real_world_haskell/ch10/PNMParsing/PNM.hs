@@ -97,8 +97,7 @@ parseP5_take2 s =
     \(bitmap, s) -> Just (Greymap width height maxGrey bitmap, s)
 
 
-fstGreymap :: FilePath -> IO (Maybe Greymap)
-fstGreymap path = do
-    bytes <- L.readFile path
-    -- return $ fst `liftM` (parseP5 bytes)
-    return $ fst `liftM` (parseP5_take2 bytes)
+fstGreymap :: L.ByteString -> Maybe Greymap
+fstGreymap bytes = 
+    -- fst `liftM` (parseP5 bytes)
+    fst `liftM` (parseP5_take2 bytes)

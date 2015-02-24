@@ -1,4 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+module Parse (parse) where
+
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Char8 as L8
 import Data.Int (Int64)

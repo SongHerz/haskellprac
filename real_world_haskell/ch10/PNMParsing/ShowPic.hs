@@ -20,13 +20,16 @@
 -- -}
 
 import Graphics.Gloss
-import PNM
+import PNM (fstGreymap)
+import Parse (parse)
 import Greymap (Greymap(..))
 import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8)
 
 import System.Environment (getArgs)
 
+
+data ParserType = Naive | Advanced
 
 chunksOf :: Int -> L.ByteString -> [L.ByteString]
 chunksOf w bs = helper bs []
@@ -47,21 +50,33 @@ gm2pic gm = bitmapOfByteString (greyWidth gm) (greyHeight gm) (L.toStrict rgbaDa
           rgbaData = L.concatMap (\w8 -> L.pack $ map convert [fromIntegral (greyMax gm), w8, w8, w8]) $ flipVertically (greyWidth gm) (greyData gm)
 
 
-showPic :: FilePath -> IO ()
-showPic path = do
-    mgm <- fstGreymap path
-    let (width, height, pic) = case mgm of
-                                  Nothing -> (0, 0, blank)
-                                  Just gm -> (greyWidth gm, greyHeight gm, gm2pic gm)
+chooseParser :: ParserType -> (L.ByteString -> Either String Greymap)
+chooseParser Naive = \bytes -> case fstGreymap bytes of
+                                  Just gm -> Right gm
+                                  Nothing -> Left "Failed to parse with naive parser"
+chooseParser Advanced = parse
 
+
+showGreymap :: Greymap -> IO ()
+showGreymap gm = do
+    let width = greyWidth gm
+        height = greyHeight gm
     let dis = InWindow "Picture" (width , height) (10, 10)
     putStrLn $ "width: " ++ show width
     putStrLn $ "height: " ++ show height
     -- display dis black $ color white $ text "abc"
-    display dis black $ pic
+    display dis black $ gm2pic gm
+
+showGreymapFromFile :: ParserType -> FilePath -> IO ()
+showGreymapFromFile pt path = do
+    bytes <- L.readFile path
+    let egm = chooseParser pt $ bytes
+    case egm of
+        Left err -> putStrLn err
+        Right gm -> showGreymap gm
 
 main = do
     args <- getArgs
     case args of
-        [x] -> showPic x
+        [x] -> showGreymapFromFile Naive x
         _   -> putStrLn "Usage: app <pgm_file>"
