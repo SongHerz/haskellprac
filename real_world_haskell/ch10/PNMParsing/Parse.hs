@@ -100,10 +100,8 @@ parseWhile p = (fmap p <$> peekByte) ==> \mp ->
 parseWhileWith :: (Word8 -> a) -> (a -> Bool) -> Parse [a]
 parseWhileWith f p = fmap f <$> parseWhile (p . f)
 
--- Return Parse True, when at least one space skipped
---        Parse False, when no space skipped
-skipSpaces :: Parse Bool
-skipSpaces = parseWhileWith w2c isSpace ==> \spaces -> identity $ (not . null) spaces
+skipSpaces :: Parse ()
+skipSpaces = parseWhileWith w2c isSpace ==>& identity ()
 
 -- Return Parse True, when one comment skipped
 --        Parse False, when no comment skipped
@@ -121,9 +119,9 @@ skipComment = peekChar ==> \mc ->
 --        # another comment
 --        Add this feature when implementing ascii pgm parsing.
 skipSpcCmt :: Parse ()
-skipSpcCmt = skipSpaces ==> \spcSkipped ->
+skipSpcCmt = skipSpaces ==>&
              skipComment ==> \cmtSkipped ->
-             if spcSkipped || cmtSkipped
+             if cmtSkipped
              then skipSpcCmt
              else identity ()
 
