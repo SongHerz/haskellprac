@@ -75,8 +75,19 @@ showGreymapFromFile pt path = do
         Left err -> putStrLn err
         Right gm -> showGreymap gm
 
+usage :: String 
+usage = "Usage: app [-n] <pgm_file>"
+
+parseArgs :: [String] -> Either String (ParserType, FilePath)
+parseArgs [path]    = Right (Advanced, path)
+parseArgs [opt0, opt1]
+    | opt0 == "-n"  = Right (Naive, opt1)
+    | opt1 == "-n"  = Right (Naive, opt0)
+    | otherwise     =Left usage
+parseArgs _         = Left usage
+
 main = do
     args <- getArgs
-    case args of
-        [x] -> showGreymapFromFile Naive x
-        _   -> putStrLn "Usage: app <pgm_file>"
+    case parseArgs args of
+        Left err -> putStrLn err
+        Right (pt, path) -> showGreymapFromFile pt path
