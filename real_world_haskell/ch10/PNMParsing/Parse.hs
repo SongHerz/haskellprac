@@ -138,13 +138,24 @@ parseNat = parseWhileWith w2c isDigit ==> \digits ->
                    then bail "integer overflow"
                    else identity n
 
+-- This version also works, but performance not solved
+-- parseNats :: Int -> Parse L.ByteString
+-- parseNats n = L.pack <$> helper n
+--     where helper :: Int -> Parse [Word8]
+--           helper n 
+--             | n <= 0 = identity []
+--             | otherwise =
+--                 skipSpcCmt ==>& 
+--                 parseNat ==> \nat ->
+--                 (fromIntegral nat :) <$> helper (n - 1)
+
 parseNats :: Int -> Parse L.ByteString
 parseNats n
     | n <= 0 = identity L.empty
     | otherwise =
         skipSpcCmt ==>& 
         parseNat ==> \nat ->
-        (L.cons $ fromIntegral nat) <$> parseNats (n - 1)
+        (L.cons (fromIntegral nat)) <$> parseNats (n - 1)
 
 parseBytes :: Int -> Parse L.ByteString
 parseBytes n =
