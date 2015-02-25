@@ -126,7 +126,7 @@ assert False err = bail err
 parseNat :: Parse Int
 parseNat = parseWhileWith w2c isDigit ==> \digits ->
            if null digits
-           then bail "no more input"
+           then bail "No digit extracted"
            else let n = read digits
                 in if n < 0
                    then bail "integer overflow"
