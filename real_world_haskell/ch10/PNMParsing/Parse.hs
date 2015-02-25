@@ -151,34 +151,55 @@ parseBytes n =
        identity h
 
 
--- http://people.sc.fsu.edu/~jburkardt/data/pgmb/pgmb.html
--- For binary pgm format and examples.
-parseRawPGM :: Parse Greymap
-parseRawPGM =
-    parseWhileWith w2c notWhite ==> \header -> skipSpcCmt ==>&
-    assert (header == "P5") "invalid raw header" ==>&
+data PGMType = Binary | Ascii deriving (Eq, Show)
+
+parsePGMType :: Parse PGMType
+parsePGMType =
+    parseWhileWith w2c notWhite ==> \header ->
+    case header of
+        "P5"    -> identity Binary
+        "P2"    -> identity Ascii
+        _       -> bail $ "Invalid header: " ++ header
+
+parsePGMHeader :: Parse (PGMType, Int, Int, Int) 
+parsePGMHeader =
+    parsePGMType ==> \type_ -> skipSpcCmt ==>&
     parseNat ==> \width -> skipSpcCmt ==>&
     parseNat ==> \height -> skipSpcCmt ==>&
-    parseNat ==> \maxGrey ->
-    parseByte ==>&
-    parseBytes (width * height) ==> \bitmap ->
-    identity (Greymap width height maxGrey bitmap)
+    parseNat ==> \maxGrey -> consumeHeaderTail type_ ==>&
+    identity (type_, width, height, maxGrey)
+    where consumeHeaderTail type_ =
+            case type_ of
+                Binary  -> parseByte ==>& identity()
+                Ascii   -> skipSpcCmt
+
+parseRawPGMBody :: Int -> Int -> Parse L.ByteString
+parseRawPGMBody w h = parseBytes (w * h)
+
+parsePlainPGMBody :: Int -> Int -> Parse L.ByteString
+parsePlainPGMBody w h = parseNats (w * h)
+
+
+-- http://people.sc.fsu.edu/~jburkardt/data/pgmb/pgmb.html
+-- For binary pgm format and examples.
 
 -- http://people.sc.fsu.edu/~jburkardt/data/pgma/pgma.html
 -- For plain pgm format and examples.
 --
 -- FIXME: It looks the performance for plain PGM parsing is not good.
 --        I guess cons byte string is time consuming, and the bottle neck is at parseNats,
-parsePlainPGM :: Parse Greymap
-parsePlainPGM =
-    parseWhileWith w2c notWhite ==> \header -> skipSpcCmt ==>&
-    assert (header == "P2") "invalid plain header" ==>&
-    parseNat ==> \width -> skipSpcCmt ==>&
-    parseNat ==> \height -> skipSpcCmt ==>&
-    parseNat ==> \maxGrey ->
-    skipSpcCmt ==>&
-    parseNats (width * height) ==> \bitmap ->
+
+parsePGM :: Parse Greymap
+parsePGM =
+    parsePGMHeader ==> \(type_, width, height, maxGrey) ->
+    parseBody type_ width height ==> \bitmap ->
     identity (Greymap width height maxGrey bitmap)
+    where parseBody type_ width height = 
+            let doParse = case type_ of
+                            Binary -> parseRawPGMBody
+                            Ascii  -> parsePlainPGMBody
+            in doParse width height
+                                
 
 runAParser :: Parse a -> L.ByteString -> Either String a
 runAParser parser initStr =
@@ -188,4 +209,5 @@ runAParser parser initStr =
 
 parse :: L.ByteString -> Either String Greymap
 -- parse initStr = runAParser parseRawPGM initStr
-parse initStr = runAParser parsePlainPGM initStr
+-- parse initStr = runAParser parsePlainPGM initStr
+parse initStr = runAParser parsePGM initStr
