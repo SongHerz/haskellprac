@@ -109,6 +109,13 @@ skipComment = peekChar ==> \mc ->
                   Just '#' -> parseWhileWith w2c (`notElem` lineTerms) ==>& identity ()
                   _        -> identity ()
 
+-- FIXME: This function cannot skip consecutive comments for now.
+--
+--        E .g.
+--        # Some comment
+--        ... Arbitrary spaces and comments inside
+--        # another comment
+--        Add this feature when implementing ascii pgm parsing.
 skipSpcCmt :: Parse ()
 skipSpcCmt = skipSpaces ==>& skipComment ==>& skipSpaces
 
