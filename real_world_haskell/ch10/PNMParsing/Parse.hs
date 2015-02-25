@@ -68,6 +68,15 @@ parseByte =
                                          offset = newOffset }
                   newOffset = offset initState + 1
 
+whites :: String
+whites = " \t\r\n"
+
+lineTerms :: String
+lineTerms = "\r\n"
+
+notWhite :: Char -> Bool
+notWhite = (`notElem` whites)
+
 w2c :: Word8 -> Char
 w2c = chr . fromIntegral
 
@@ -94,6 +103,15 @@ parseWhileWith f p = fmap f <$> parseWhile (p . f)
 skipSpaces :: Parse ()
 skipSpaces = parseWhileWith w2c isSpace ==>& identity ()
 
+skipComment :: Parse ()
+skipComment = peekChar ==> \mc -> 
+              case mc of
+                  Just '#' -> parseWhileWith w2c (`notElem` lineTerms) ==>& identity ()
+                  _        -> identity ()
+
+skipSpcCmt :: Parse ()
+skipSpcCmt = skipSpaces ==>& skipComment ==>& skipSpaces
+
 assert :: Bool -> String -> Parse ()
 assert True _    = identity ()
 assert False err = bail err
@@ -119,15 +137,14 @@ parseBytes n =
 
 parseRawPGM :: Parse Greymap
 parseRawPGM =
-    parseWhileWith w2c notWhite ==> \header -> skipSpaces ==>&
+    parseWhileWith w2c notWhite ==> \header -> skipSpcCmt ==>&
     assert (header == "P5") "invalid raw header" ==>&
-    parseNat ==> \width -> skipSpaces ==>&
-    parseNat ==> \height -> skipSpaces ==>&
+    parseNat ==> \width -> skipSpcCmt ==>&
+    parseNat ==> \height -> skipSpcCmt ==>&
     parseNat ==> \maxGrey ->
     parseByte ==>&
     parseBytes (width * height) ==> \bitmap ->
     identity (Greymap width height maxGrey bitmap)
-  where notWhite = (`notElem` " \r\n\t")
 
 runAParser :: Parse a -> L.ByteString -> Either String a
 runAParser parser initStr =
