@@ -100,14 +100,18 @@ parseWhile p = (fmap p <$> peekByte) ==> \mp ->
 parseWhileWith :: (Word8 -> a) -> (a -> Bool) -> Parse [a]
 parseWhileWith f p = fmap f <$> parseWhile (p . f)
 
-skipSpaces :: Parse ()
-skipSpaces = parseWhileWith w2c isSpace ==>& identity ()
+-- Return Parse True, when at least one space skipped
+--        Parse False, when no space skipped
+skipSpaces :: Parse Bool
+skipSpaces = parseWhileWith w2c isSpace ==> \spaces -> identity $ (not . null) spaces
 
-skipComment :: Parse ()
+-- Return Parse True, when one comment skipped
+--        Parse False, when no comment skipped
+skipComment :: Parse Bool
 skipComment = peekChar ==> \mc -> 
               case mc of
-                  Just '#' -> parseWhileWith w2c (`notElem` lineTerms) ==>& identity ()
-                  _        -> identity ()
+                  Just '#' -> parseWhileWith w2c (`notElem` lineTerms) ==>& identity True
+                  _        -> identity False
 
 -- FIXME: This function cannot skip consecutive comments for now.
 --
@@ -117,7 +121,11 @@ skipComment = peekChar ==> \mc ->
 --        # another comment
 --        Add this feature when implementing ascii pgm parsing.
 skipSpcCmt :: Parse ()
-skipSpcCmt = skipSpaces ==>& skipComment ==>& skipSpaces
+skipSpcCmt = skipSpaces ==> \spcSkipped ->
+             skipComment ==> \cmtSkipped ->
+             if spcSkipped || cmtSkipped
+             then skipSpcCmt
+             else identity ()
 
 assert :: Bool -> String -> Parse ()
 assert True _    = identity ()
