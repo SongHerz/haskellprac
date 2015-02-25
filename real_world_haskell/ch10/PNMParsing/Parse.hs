@@ -132,6 +132,14 @@ parseNat = parseWhileWith w2c isDigit ==> \digits ->
                    then bail "integer overflow"
                    else identity n
 
+parseNats :: Int -> Parse L.ByteString
+parseNats n
+    | n <= 0 = identity L.empty
+    | otherwise =
+        skipSpcCmt ==>& 
+        parseNat ==> \nat ->
+        (L.cons $ fromIntegral nat) <$> parseNats (n - 1)
+
 parseBytes :: Int -> Parse L.ByteString
 parseBytes n =
     getState ==> \st ->
@@ -142,6 +150,9 @@ parseBytes n =
        assert (L.length h == n') "end of input" ==>&
        identity h
 
+
+-- http://people.sc.fsu.edu/~jburkardt/data/pgmb/pgmb.html
+-- For binary pgm format and examples.
 parseRawPGM :: Parse Greymap
 parseRawPGM =
     parseWhileWith w2c notWhite ==> \header -> skipSpcCmt ==>&
@@ -153,6 +164,22 @@ parseRawPGM =
     parseBytes (width * height) ==> \bitmap ->
     identity (Greymap width height maxGrey bitmap)
 
+-- http://people.sc.fsu.edu/~jburkardt/data/pgma/pgma.html
+-- For plain pgm format and examples.
+--
+-- FIXME: It looks the performance for plain PGM parsing is not good.
+--        I guess cons byte string is time consuming, and the bottle neck is at parseNats,
+parsePlainPGM :: Parse Greymap
+parsePlainPGM =
+    parseWhileWith w2c notWhite ==> \header -> skipSpcCmt ==>&
+    assert (header == "P2") "invalid plain header" ==>&
+    parseNat ==> \width -> skipSpcCmt ==>&
+    parseNat ==> \height -> skipSpcCmt ==>&
+    parseNat ==> \maxGrey ->
+    skipSpcCmt ==>&
+    parseNats (width * height) ==> \bitmap ->
+    identity (Greymap width height maxGrey bitmap)
+
 runAParser :: Parse a -> L.ByteString -> Either String a
 runAParser parser initStr =
     case runParse parser (ParseState initStr 0) of
@@ -160,4 +187,5 @@ runAParser parser initStr =
         Right (result, _)   -> Right result
 
 parse :: L.ByteString -> Either String Greymap
-parse initStr = runAParser parseRawPGM initStr
+-- parse initStr = runAParser parseRawPGM initStr
+parse initStr = runAParser parsePlainPGM initStr
