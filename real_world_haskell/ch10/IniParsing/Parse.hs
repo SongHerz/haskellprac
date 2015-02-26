@@ -163,11 +163,11 @@ parseOptions =
         Just optval ->
             (optval:) <$> parseOptions
 
--- Parse a whole section, including comments before/after a section 
+-- Parse a whole section, 
+-- excluding comments before a section,
+-- including comments after a section
 parseSection :: Parse Section
 parseSection =
-    -- Ignore comments
-    parseComments ==>&
     parseSectionHeader ==> \sect ->
     if null sect
     then bail "Invalid section header"
@@ -175,7 +175,15 @@ parseSection =
          identity $ Section sect optvals
 
 
--- FIXME: Add parseSections
+-- Parse all sections in a ini file.
+parseSections :: Parse [Section]
+parseSections =
+    parseComments ==>&
+    parseIsEOF ==> \eof ->
+    if eof
+    then identity []
+    else parseSection ==> \section ->
+         (section:) <$> parseSections
 
 runParse :: L8.ByteString -> Parse a -> Either String a
 runParse bs parser = case runState parser (ParseState bs 0) of

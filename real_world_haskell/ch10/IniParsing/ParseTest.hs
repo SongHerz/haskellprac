@@ -57,8 +57,7 @@ optionsStr = List.unlines $ "# comment" `List.intersperse` options
 multiOptionsTest = testTemplate "Options"
     optionsStr parseOptions (Right [("opt0","val0"),("opt1","val1")])
 
-aSection = ["# Comment before sect",
-           "",
+aSection = [
            "[Section] # Comment after section",
            "# Comment inner section",
            "opt0 = val0",
@@ -68,6 +67,29 @@ aSection = ["# Comment before sect",
            ]
 sectionTest = testTemplate "A section"
     (List.unlines aSection) parseSection (Right $ Section "Section" [("opt0","val0"),("opt1","val1")])
+
+sects = ["# Comment before sect",
+           "",
+           "[Section] # Comment after section",
+           "# Comment inner section",
+           "opt0 = val0",
+           "# Comment inner section",
+           "opt1 = val1",
+           "# Comment after section",
+           "",
+           "[Section2]",
+           "opt0 = val00",
+           "opt1 = val11",
+           "opt2 = val22"
+           ]
+
+multiSectionsTest = testTemplate "Multi sections"
+    (List.unlines sects) parseSections
+    (Right $ [
+                 Section "Section" [("opt0","val0"), ("opt1","val1")]
+               , Section "Section2" [("opt0", "val00"), ("opt1", "val11"), ("opt2", "val22")]
+             ])
+
 
 testCases = TestLabel "Ini unit tests" $ TestList [
         charTest
@@ -87,6 +109,7 @@ testCases = TestLabel "Ini unit tests" $ TestList [
       , multiOptionsTest
 
       , sectionTest
+      , multiSectionsTest
       ]
 
 main = runTestTT testCases
