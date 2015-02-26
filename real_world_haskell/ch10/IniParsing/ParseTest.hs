@@ -16,15 +16,29 @@ charTestExhausted = testTemplate "Parse char exhausted"
     "" parseChar (Left "Error: No more input, offset: 0")
 
 commentTest = testTemplate "Parse a comment"
-    "# This is a comment" parseComment (Right $ Just "# This is a comment")
+    "# This is a comment" parseComment (Right $ "# This is a comment")
 
 commentTestNoCmt = testTemplate "No comment"
-    "no comment" parseComment (Right Nothing)
+    "no comment" parseComment (Right "")
+
+sectionHeaderTest = testTemplate "Parse section header"
+    "[  section ]" parseSectionHeader (Right $ "section")
+
+sectionHeaderTestNoSect = testTemplate "No section header"
+    "no section" parseSectionHeader (Right $ "")
+
+sectionHeaderTestEmptySect = testTemplate "Empty section header"
+    "[ ]" parseSectionHeader (Left $ "Error: Empty section header, offset: 3")
 
 testCases = TestLabel "Ini unit tests" $ TestList [
-      charTest,
-      charTestExhausted,
-      commentTest,
-      commentTestNoCmt]
+        charTest
+      , charTestExhausted
+
+      , commentTest
+      , commentTestNoCmt
+      , sectionHeaderTest
+      , sectionHeaderTestNoSect
+      , sectionHeaderTestEmptySect
+      ]
 
 main = runTestTT testCases

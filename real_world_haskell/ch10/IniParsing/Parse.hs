@@ -4,6 +4,7 @@ module Parse where
 
 import qualified Data.ByteString.Lazy.Char8 as L8
 import Data.Int (Int64)
+import Data.Char (isSpace)
 import Control.Applicative ((<$>))
 
 data Section = Section { 
@@ -23,6 +24,15 @@ data ParseState = ParseState {
 newtype Parse a = Parse {
     runState :: ParseState -> Either String (a, ParseState)
     }
+
+stripStart :: String -> String
+stripStart str = dropWhile isSpace str
+
+stripEnd :: String -> String
+stripEnd str = reverse . stripStart . reverse $ str
+
+strip :: String -> String
+strip str = stripStart . stripEnd $ str
 
 identity :: a -> Parse a
 identity a = Parse $ \state -> Right (a, state)
@@ -92,24 +102,30 @@ parseSpaces :: Parse String
 parseSpaces = parseWhile isWhite
 
 -- Assume no space ahead
-parseComment :: Parse (Maybe String)
+parseComment :: Parse String
 parseComment =
     peekChar ==> \mc ->
     if mc == Just '#'
-    then Just <$> parseWhile (not . isLineTerm)
-    else identity Nothing
+    then parseWhile (not . isLineTerm)
+    else identity ""
 
 -- Assume no space ahead
-parseSectionHeader :: Parse (Maybe String)
+parseSectionHeader :: Parse String
 parseSectionHeader =
     peekChar ==> \mc ->
     if mc == Just '['
     then parseChar ==>&
-         parseWhile (/= ']') ==> \sect ->
+         (strip <$> parseWhile (/= ']')) ==> \sect ->
          -- Consume the last ']'
          parseChar ==>&
-         (identity $ Just sect)
-     else identity Nothing
+         checkAndReturnSectHeader sect
+     else identity ""
+     where checkAndReturnSectHeader :: String -> Parse String
+           checkAndReturnSectHeader sect =
+               if null sect
+               then bail "Empty section header"
+               else identity sect
+
 
 -- Assume no space ahead
 parseOption :: Parse (Maybe (String, String))
