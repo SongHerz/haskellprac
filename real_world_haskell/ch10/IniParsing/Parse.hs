@@ -92,12 +92,12 @@ parseSpaces :: Parse String
 parseSpaces = parseWhile isWhite
 
 -- Assume no space ahead
-parseComment :: Parse String
+parseComment :: Parse (Maybe String)
 parseComment =
     peekChar ==> \mc ->
     if mc == Just '#'
-    then parseWhile (not . isLineTerm)
-    else identity ""
+    then Just <$> parseWhile (not . isLineTerm)
+    else identity Nothing
 
 -- Assume no space ahead
 parseSectionHeader :: Parse (Maybe String)
