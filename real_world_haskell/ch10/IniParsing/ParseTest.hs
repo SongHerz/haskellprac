@@ -52,6 +52,11 @@ optionTestNoAssign = testTemplate "Option no '='"
 optionTestNoOpt = testTemplate "No option"
     "  " parseOption (Right $ Nothing)
 
+options = ["opt0 = val0", "opt1 = val1"]
+optionsStr = List.unlines $ "# comment" `List.intersperse` options
+multiOptionsTest = testTemplate "Options"
+    optionsStr parseOptions (Right [("opt0","val0"),("opt1","val1")])
+
 testCases = TestLabel "Ini unit tests" $ TestList [
         charTest
       , charTestExhausted
@@ -67,6 +72,7 @@ testCases = TestLabel "Ini unit tests" $ TestList [
       , optionTestEmptyValue
       , optionTestNoAssign
       , optionTestNoOpt
+      , multiOptionsTest
       ]
 
 main = runTestTT testCases

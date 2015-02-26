@@ -8,8 +8,7 @@ import Data.Char (isSpace)
 import Control.Applicative ((<$>))
 
 data Section = Section { 
-       options :: [String]
-     , values :: [String]
+       optionValues :: [(String, String)]
      }
      deriving (Show)
 
@@ -151,6 +150,17 @@ parseOption =
         else parseChar ==>& -- consume the '='
              (strip <$> parseWhile (not . isLineTerm)) ==> \optval ->
              identity $ Just (optname, optval)
+
+parseOptions :: Parse [(String, String)]
+parseOptions = 
+    -- Ignore comments
+    parseComments ==>&
+    parseOption ==> \moptval ->
+    case moptval of
+        Nothing ->
+            identity []
+        Just optval ->
+            (optval:) <$> parseOptions
 
 runParse :: L8.ByteString -> Parse a -> Either String a
 runParse bs parser = case runState parser (ParseState bs 0) of
