@@ -30,6 +30,18 @@ sectionHeaderTestNoSect = testTemplate "No section header"
 sectionHeaderTestEmptySect = testTemplate "Empty section header"
     "[ ]" parseSectionHeader (Left $ "Error: Empty section header, offset: 3")
 
+optionTest = testTemplate "Option"
+    "opt = somevalue  " parseOption (Right $ Just ("opt", "somevalue"))
+
+optionTestEmptyValue = testTemplate "Option empty value"
+    "opt =" parseOption (Right $ Just ("opt", ""))
+
+optionTestNoAssign = testTemplate "Option no '='"
+    "opt somevalue  " parseOption (Left "Error: Invalid option, due to no '=' found, offset: 4")
+
+optionTestNoOpt = testTemplate "No option"
+    "  " parseOption (Right $ Nothing)
+
 testCases = TestLabel "Ini unit tests" $ TestList [
         charTest
       , charTestExhausted
@@ -39,6 +51,10 @@ testCases = TestLabel "Ini unit tests" $ TestList [
       , sectionHeaderTest
       , sectionHeaderTestNoSect
       , sectionHeaderTestEmptySect
+      , optionTest
+      , optionTestEmptyValue
+      , optionTestNoAssign
+      , optionTestNoOpt
       ]
 
 main = runTestTT testCases

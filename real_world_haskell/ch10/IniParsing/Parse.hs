@@ -131,7 +131,7 @@ parseSectionHeader =
 parseOption :: Parse (Maybe (String, String))
 parseOption =
     -- get option name
-    parseWhile (not . (\c -> isWhite c || c == '[')) ==> \optname ->
+    (strip <$> parseWhile (not . (\c -> isWhite c || c `elem` "[="))) ==> \optname ->
     if null optname
     -- no option name found
     then identity Nothing
@@ -141,7 +141,7 @@ parseOption =
         if findEq /= Just True
         then bail "Invalid option, due to no '=' found"
         else parseChar ==>& -- consume the '='
-             parseWhile (not . isLineTerm) ==> \optval ->
+             (strip <$> parseWhile (not . isLineTerm)) ==> \optval ->
              identity $ Just (optname, optval)
 
 runParse :: L8.ByteString -> Parse a -> Either String a
