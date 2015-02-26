@@ -189,3 +189,8 @@ runParse :: L8.ByteString -> Parse a -> Either String a
 runParse bs parser = case runState parser (ParseState bs 0) of
                          Left err -> Left err
                          Right (result, _) -> Right result
+
+-- FIXME: Add function to parse the whole ini file
+-- FIXME: Study how to isolate functions in this module, and only expose
+--        one function that parsing the whole ini file.
+--        And only necessary data types are exposed also.
