@@ -109,6 +109,14 @@ parseComment =
     then parseWhile (not . isLineTerm)
     else identity ""
 
+parseComments :: Parse [String]
+parseComments =
+    parseSpaces ==>&
+    parseComment ==> \cmt ->
+    if null cmt
+    then identity []
+    else (cmt:) <$> parseComments
+
 -- Assume no space ahead
 parseSectionHeader :: Parse String
 parseSectionHeader =

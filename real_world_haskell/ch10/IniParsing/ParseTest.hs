@@ -1,6 +1,7 @@
 import Parse
 import Test.HUnit
 
+import qualified Data.List as List
 import Data.ByteString.Lazy.Char8 as L8
 
 testTemplate :: (Eq a, Show a) => String -> String -> Parse a -> Either String a -> Test
@@ -16,10 +17,19 @@ charTestExhausted = testTemplate "Parse char exhausted"
     "" parseChar (Left "Error: No more input, offset: 0")
 
 commentTest = testTemplate "Parse a comment"
-    "# This is a comment" parseComment (Right $ "# This is a comment")
+    "# This is a comment" parseComment (Right "# This is a comment")
 
 commentTestNoCmt = testTemplate "No comment"
     "no comment" parseComment (Right "")
+
+commentsTest1 = testTemplate "One comment"
+    "# comment1" parseComments (Right ["# comment1"])
+
+twoComments = ["# comment1", "#comment2"]
+twoCommentsWithEmptyLines = List.intersperse " " twoComments
+commentsTest2 = testTemplate "Two comment"
+    (List.unlines twoCommentsWithEmptyLines)
+    parseComments (Right twoComments)
 
 sectionHeaderTest = testTemplate "Parse section header"
     "[  section ]" parseSectionHeader (Right $ "section")
@@ -48,6 +58,8 @@ testCases = TestLabel "Ini unit tests" $ TestList [
 
       , commentTest
       , commentTestNoCmt
+      , commentsTest1
+      , commentsTest2
       , sectionHeaderTest
       , sectionHeaderTestNoSect
       , sectionHeaderTestEmptySect
