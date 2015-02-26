@@ -8,9 +8,10 @@ import Data.Char (isSpace)
 import Control.Applicative ((<$>))
 
 data Section = Section { 
-       optionValues :: [(String, String)]
+         name :: String
+       , optionValues :: [(String, String)]
      }
-     deriving (Show)
+     deriving (Eq, Show)
 
 data Ini = Ini { sections :: [Section] } deriving (Show)
 
@@ -126,7 +127,7 @@ parseSectionHeader =
          -- Consume the last ']'
          parseChar ==>&
          checkAndReturnSectHeader sect
-     else identity ""
+     else bail "Invalid section header"
      where checkAndReturnSectHeader :: String -> Parse String
            checkAndReturnSectHeader sect =
                if null sect
@@ -161,6 +162,20 @@ parseOptions =
             identity []
         Just optval ->
             (optval:) <$> parseOptions
+
+-- Parse a whole section, including comments before/after a section 
+parseSection :: Parse Section
+parseSection =
+    -- Ignore comments
+    parseComments ==>&
+    parseSectionHeader ==> \sect ->
+    if null sect
+    then bail "Invalid section header"
+    else parseOptions ==> \optvals ->
+         identity $ Section sect optvals
+
+
+-- FIXME: Add parseSections
 
 runParse :: L8.ByteString -> Parse a -> Either String a
 runParse bs parser = case runState parser (ParseState bs 0) of

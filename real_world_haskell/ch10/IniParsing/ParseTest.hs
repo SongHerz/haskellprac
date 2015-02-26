@@ -35,7 +35,7 @@ sectionHeaderTest = testTemplate "Parse section header"
     "[  section ]" parseSectionHeader (Right $ "section")
 
 sectionHeaderTestNoSect = testTemplate "No section header"
-    "no section" parseSectionHeader (Right $ "")
+    "no section" parseSectionHeader (Left $ "Error: Invalid section header, offset: 0")
 
 sectionHeaderTestEmptySect = testTemplate "Empty section header"
     "[ ]" parseSectionHeader (Left $ "Error: Empty section header, offset: 3")
@@ -57,6 +57,18 @@ optionsStr = List.unlines $ "# comment" `List.intersperse` options
 multiOptionsTest = testTemplate "Options"
     optionsStr parseOptions (Right [("opt0","val0"),("opt1","val1")])
 
+aSection = ["# Comment before sect",
+           "",
+           "[Section] # Comment after section",
+           "# Comment inner section",
+           "opt0 = val0",
+           "# Comment inner section",
+           "opt1 = val1",
+           "# Comment after section"
+           ]
+sectionTest = testTemplate "A section"
+    (List.unlines aSection) parseSection (Right $ Section "Section" [("opt0","val0"),("opt1","val1")])
+
 testCases = TestLabel "Ini unit tests" $ TestList [
         charTest
       , charTestExhausted
@@ -73,6 +85,8 @@ testCases = TestLabel "Ini unit tests" $ TestList [
       , optionTestNoAssign
       , optionTestNoOpt
       , multiOptionsTest
+
+      , sectionTest
       ]
 
 main = runTestTT testCases
