@@ -1,0 +1,14 @@
+This is a practice for me to be familiar with the though on implicit state
+processing by parsing a simplified windows ini format.
+
+The format is like:
+# A comment
+# another comment
+
+[Section] # case sensitive, and each section should be unique
+          # spaces between brackets and section name are ignored.
+
+# A option is also case sensitive, and each option in a setion should be
+# unique.
+# But different sections can have options with same name.
+option0 = some value
