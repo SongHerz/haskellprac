@@ -10,8 +10,9 @@ data Section = Section {
        options :: [String]
      , values :: [String]
      }
+     deriving (Show)
 
-data Ini = Ini { sections :: [Section] }
+data Ini = Ini { sections :: [Section] } deriving (Show)
 
 
 data ParseState = ParseState {
@@ -84,9 +85,13 @@ isWhite = (`elem` whites)
 isLineTerm :: Char -> Bool
 isLineTerm = (`elem` lineTerms)
 
+parseIsEOF :: Parse Bool
+parseIsEOF = (== Nothing) <$> peekChar
+
 parseSpaces :: Parse String
 parseSpaces = parseWhile isWhite
 
+-- Assume no space ahead
 parseComment :: Parse String
 parseComment =
     peekChar ==> \mc ->
@@ -94,6 +99,7 @@ parseComment =
     then parseWhile (not . isLineTerm)
     else identity ""
 
+-- Assume no space ahead
 parseSectionHeader :: Parse (Maybe String)
 parseSectionHeader =
     peekChar ==> \mc ->
@@ -105,5 +111,24 @@ parseSectionHeader =
          (identity $ Just sect)
      else identity Nothing
 
--- parseOption :: Parse (String, String)
--- parseOption
+-- Assume no space ahead
+parseOption :: Parse (Maybe (String, String))
+parseOption =
+    -- get option name
+    parseWhile (not . (\c -> isWhite c || c == '[')) ==> \optname ->
+    if null optname
+    -- no option name found
+    then identity Nothing
+    -- find option
+    else parseSpaces ==>&
+        ((fmap (== '=')) <$> peekChar) ==> \findEq ->
+        if findEq /= Just True
+        then bail "Invalid option, due to no '=' found"
+        else parseChar ==>& -- consume the '='
+             parseWhile (not . isLineTerm) ==> \optval ->
+             identity $ Just (optname, optval)
+
+runParse :: L8.ByteString -> Parse a -> Either String a
+runParse bs parser = case runState parser (ParseState bs 0) of
+                         Left err -> Left err
+                         Right (result, _) -> Right result
