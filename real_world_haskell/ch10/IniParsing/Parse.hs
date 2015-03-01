@@ -149,7 +149,7 @@ parseOption =
         if findEq /= Just True
         then bail "Invalid option, due to no '=' found"
         else parseChar ==>& -- consume the '='
-             (strip <$> parseWhile (not . isLineTerm)) ==> \optval ->
+             (strip <$> parseWhile (not . (\c -> isLineTerm c || c == '#'))) ==> \optval ->
              identity $ Just (optname, optval)
 
 parseOptions :: Parse [(String, String)]
