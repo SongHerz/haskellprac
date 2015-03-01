@@ -195,6 +195,49 @@ parse bs = case runParse bs parseSections of
                Left err -> Left err
                Right sects -> Right $ Ini sects
  
+
+---------------------
+-- Pretty printing --
+---------------------
+
+-- As 'show' is intended to print haskell expression,
+-- we need our own way to pretty print our data structure.
+-- NOTE: 
+--  1. To make the algorithm linear, ShowS is used
+--  2. Space is an operator, and it has the highest priority
+
+ppOption :: (String, String) -> ShowS
+ppOption (opt, val) = \s -> concat [opt,  " = ", val, s]
+
+ppOptionLn :: (String, String) -> ShowS
+ppOptionLn optVal = ppOption optVal . (\s -> '\n' : s)
+
+ppSection :: Section -> ShowS
+ppSection sect = showSectHeaderLn . showOpts
+    where showSectHeader :: ShowS
+          showSectHeader = \s -> concat ["[", name sect, "]", s]
+
+          showSectHeaderLn :: ShowS
+          showSectHeaderLn = showSectHeader . (\s -> '\n' : s)
+
+          showOpts :: ShowS
+          showOpts = foldr (\ss acc -> ss . acc)
+                           id
+                           (map ppOptionLn $ optionValues sect)
+
+ppSectionLn :: Section -> ShowS
+ppSectionLn sect = ppSection sect . (\s -> '\n' : s)
+
+ppIni :: Ini -> ShowS
+ppIni ini = foldr (\ss acc -> ss . acc)
+                  id
+                  (map ppSectionLn $ sections ini)
+
+prettyPrint :: Ini -> String
+prettyPrint ini = ppIni ini ""
+
 -- FIXME: Study how to isolate functions in this module, and only expose
 --        one function that parsing the whole ini file.
 --        And only necessary data types are exposed also.
+-- FIXME: Study how to implement show and read properly from
+--        https://www.haskell.org/tutorial/stdclasses.html
