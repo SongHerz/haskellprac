@@ -210,15 +210,16 @@ ppOption :: (String, String) -> ShowS
 ppOption (opt, val) = \s -> concat [opt,  " = ", val, s]
 
 ppOptionLn :: (String, String) -> ShowS
-ppOptionLn optVal = ppOption optVal . (\s -> '\n' : s)
+-- ('\n':) is a String -> String function
+ppOptionLn optVal = ppOption optVal . ('\n':)
 
 ppSection :: Section -> ShowS
 ppSection sect = showSectHeaderLn . showOpts
     where showSectHeader :: ShowS
-          showSectHeader = \s -> concat ["[", name sect, "]", s]
+          showSectHeader = ('[':) . (name sect ++) . (']':)
 
           showSectHeaderLn :: ShowS
-          showSectHeaderLn = showSectHeader . (\s -> '\n' : s)
+          showSectHeaderLn = showSectHeader . ('\n':)
 
           showOpts :: ShowS
           showOpts = foldr (\ss acc -> ss . acc)
@@ -226,7 +227,7 @@ ppSection sect = showSectHeaderLn . showOpts
                            (map ppOptionLn $ optionValues sect)
 
 ppSectionLn :: Section -> ShowS
-ppSectionLn sect = ppSection sect . (\s -> '\n' : s)
+ppSectionLn sect = ppSection sect . ('\n':)
 
 ppIni :: Ini -> ShowS
 ppIni ini = foldr (\ss acc -> ss . acc)
