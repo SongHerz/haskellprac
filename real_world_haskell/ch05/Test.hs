@@ -1,4 +1,6 @@
 -- This is created when reading Ch11
+module Test where
+
 import Prettify
 
 import Test.QuickCheck
