@@ -48,6 +48,9 @@ args = Args
     , chatty = True
     }
 
+-- TODO: Template Haskell can be used to automatically
+--       run properties whose prefixes are 'prop_'.
+--       See $quickCheckAll and its friends of QuickCheck module.
 runTests :: Args -> IO ()
 runTests args = do
         f prop_empty_id "empty id"
