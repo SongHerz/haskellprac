@@ -1,10 +1,12 @@
 module Prettify
     (
-      Doc,
+      Doc(..),
       (<>),
+      empty,
       char,
       double,
       text,
+      line,
       fsep,
       hcat,
       punctuate,
