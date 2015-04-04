@@ -2,6 +2,7 @@
 -- For details of EAN-13 barcode.
 module EAN13 where
 
+import Data.Array (Array(..), listArray)
 import Control.Applicative ((<$>))
 
 -- http://www.gs1.org/check-digit-calculator
@@ -55,3 +56,14 @@ leftParityList = [ "111111"     -- 0
                  , "101001"     -- 8
                  , "100101"     -- 9
                  ]
+
+listToArray :: [a] -> Array Int a
+listToArray xs = listArray (0, l - 1) xs
+    where l = length xs
+
+leftOddCodes, leftEvenCodes, rightEvenCodes, leftParityCodes :: Array Int String
+
+leftOddCodes = listToArray leftOddList
+leftEvenCodes = listToArray leftEvenList
+rightEvenCodes = listToArray rightEvenList
+leftParityCodes = listToArray leftParityList
