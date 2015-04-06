@@ -2,7 +2,8 @@
 -- For details of EAN-13 barcode.
 module EAN13 where
 
-import Data.Array (Array(..), listArray)
+import Data.List (foldl', foldl1')
+import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems)
 import Control.Applicative ((<$>))
 
 -- http://www.gs1.org/check-digit-calculator
@@ -67,3 +68,40 @@ leftOddCodes = listToArray leftOddList
 leftEvenCodes = listToArray leftEvenList
 rightEvenCodes = listToArray rightEvenList
 leftParityCodes = listToArray leftParityList
+
+-- -------------------------------------
+-- foldA version from the book page 273
+-- -------------------------------------
+-- | Strict left fold, similar to foldl' on lists
+-- Use elems of Array module is better.
+{-
+foldA :: Ix k => (a -> b -> a) -> a -> Array k b -> a
+foldA f z a = go z (indices a)
+    where go z (j:js) = let z' = f z (a ! j)
+                        in z' `seq` go z' js
+          go z _ = z
+-}
+
+-- | Strict left fold using the first element of the array as its
+-- starting value, similar to foldl1 on lists
+--
+-- This version has a bug that the 1st number would be the initial value,
+-- and it will also be traversed another time.
+{-
+foldA1 :: Ix k => (a -> a -> a) -> Array k a -> a
+foldA1 f a = foldA f (a ! fst (bounds a)) a
+-}
+                            
+
+-- -------------------------------------------------------------------
+-- foldA version by me, comments from the on line comments referenced
+-- -------------------------------------------------------------------
+
+-- | Strict left fold, similar to foldl' on lists
+foldA :: Ix k => (a -> b -> a) -> a -> Array k b -> a
+foldA f z a = foldl' f z $ elems a
+
+-- | Strict left fold using the first element of the array as its
+-- starting value, similar to foldl1 on lists
+foldA1 :: Ix k => (a -> a -> a) -> Array k a -> a
+foldA1 f a = foldl1' f $ elems a
