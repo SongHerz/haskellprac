@@ -1,6 +1,6 @@
 -- Refer http://en.wikipedia.org/wiki/International_Article_Number_%28EAN%29
 -- For details of EAN-13 barcode.
-module EAN13 where
+module EAN13 (encodeDigits) where
 
 import Data.List (foldl', foldl1')
 import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems)
