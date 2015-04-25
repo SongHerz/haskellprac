@@ -69,6 +69,9 @@ leftEvenCodes = listToArray leftEvenList
 rightEvenCodes = listToArray rightEvenList
 leftParityCodes = listToArray leftParityList
 
+outerGuard = "101"
+centerGuard = "01010"
+
 -- -------------------------------------
 -- foldA version from the book page 273
 -- -------------------------------------
@@ -105,3 +108,22 @@ foldA f z a = foldl' f z $ elems a
 -- starting value, similar to foldl1 on lists
 foldA1 :: Ix k => (a -> a -> a) -> Array k a -> a
 foldA1 f a = foldl1' f $ elems a
+
+
+-- | This function computes the barcode with given 12 digits,
+-- the last checksum is computed by it.
+encodeDigits :: [Int] -> [String]
+encodeDigits s@(first:rest) =
+    outerGuard : lefties ++ centerGuard : righties ++ [outerGuard]
+    -- The book 'splitAt 5' has a bug, it should be '6' as below.
+    where (left, right) = splitAt 6 rest
+          lefties = zipWith leftEncode (leftParityCodes ! first) left
+          righties = map rightEncode (right ++ [checkDigit s])
+
+leftEncode :: Char -> Int -> String
+leftEncode '1' = (leftOddCodes !)
+leftEncode '0' = (leftEvenCodes !)
+
+rightEncode :: Int -> String
+rightEncode = (rightEvenCodes !)
+
