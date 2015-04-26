@@ -31,5 +31,55 @@ guiEncode xs = do
         Left err -> putStrLn err
 
 guiShow :: [String] -> IO ()
-guiShow _ = do
-    G.display (G.InWindow "EAN13" (100, 100) (10, 10)) G.white G.blank
+guiShow xs = do
+    G.display (G.InWindow "EAN13" (600, 200) (10, 10)) G.white (drawCode xs)
+
+drawCode :: [String] -> G.Picture
+drawCode xs = G.pictures $ concat [
+                drawBits leftGuard w guardH leftGuardOffset
+              , drawBits leftBits w bitH leftBitsOffset
+              , drawBits innerGuard w guardH innerGuardOffset
+              , drawBits rightBits w bitH rightBitsOffset
+              , drawBits rightGuard w guardH rightGuardOffset
+              ]
+    where w = 2
+          bitH = 120
+          guardH = bitH * 1.2
+
+          (leftGuard, leftBits, innerGuard, rightBits, rightGuard) = toBits xs
+          leftGuardOffset = 0.0
+          leftBitsOffset = leftGuardOffset + w * fromIntegral (length leftGuard)
+          innerGuardOffset = leftBitsOffset + w * fromIntegral (length leftBits)
+          rightBitsOffset = innerGuardOffset + w * fromIntegral (length innerGuard)
+          rightGuardOffset = rightBitsOffset + w * fromIntegral (length rightBits)
+
+-- | Draw a bit.
+-- Char c: '0'/'1'
+-- width: w
+-- height: h
+-- x offset: xo
+drawBit :: Char -> Float -> Float -> Float -> G.Picture
+drawBit c w h xo = G.color color $ G.translate xo 0 $ G.rectangleSolid w h
+                where color = if c == '0'
+                              then G.white
+                              else G.black
+
+-- | Draw bits.
+-- With given '0'/'1' string
+-- width: w
+-- height: h
+-- x offset: xo
+drawBits :: String -> Float -> Float -> Float -> [G.Picture]
+drawBits [] _ _ _ = []
+drawBits (c:xs) w h xo = drawBit c w h xo : drawBits xs w h (xo + w)
+
+-- | Split bits
+-- Split a given EAN13 bar code to
+-- (leftGuard, leftBits, innerGuard, rightBits, rightGuard)
+toBits :: [String] -> (String, String, String, String, String)
+toBits xs = map5Tuple concat (leftGuard, leftBits, innerGuard, rightBits, rightGuard)
+    where (leftGuard, rest0) = splitAt 1 xs
+          (leftBits, rest1) = splitAt 6 rest0
+          (innerGuard, rest2) = splitAt 1 rest1
+          (rightBits, rightGuard) = splitAt 6 rest2
+          map5Tuple f (a, b, c, d, e) = (f a, f b, f c, f d, f e)
