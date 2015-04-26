@@ -32,21 +32,26 @@ guiEncode xs = do
 
 guiShow :: [String] -> IO ()
 guiShow xs = do
-    G.display (G.InWindow "EAN13" (600, 200) (10, 10)) G.white (drawCode xs)
+    G.display (G.InWindow "EAN13" (ceiling w + 20, ceiling h + 20) (10, 10)) G.white pic
+    where (pic, w, h) = drawCode xs
 
-drawCode :: [String] -> G.Picture
-drawCode xs = G.pictures $ concat [
+-- | Draw picture of a EAN13 barcode.
+-- Return the picture, and width and height of it.
+drawCode :: [String] -> (G.Picture, Float, Float)
+drawCode xs = (pic, totalWidth, guardH)
+    where pic = G.translate (- totalWidth / 2) 0 $ G.pictures $ concat [
                 drawBits leftGuard w guardH leftGuardOffset guardYO
               , drawBits leftBits w bitH leftBitsOffset bitYO
               , drawBits innerGuard w guardH innerGuardOffset guardYO
               , drawBits rightBits w bitH rightBitsOffset bitYO
               , drawBits rightGuard w guardH rightGuardOffset guardYO
               ]
-    where w = 2
+
+          w = 2
           bitH = 120
-          bitYO = 0
+          bitYO = (guardH - bitH) / 2
           guardH = bitH * 1.2
-          guardYO = - (guardH - bitH) / 2
+          guardYO = 0
 
           (leftGuard, leftBits, innerGuard, rightBits, rightGuard) = toBits xs
           leftGuardOffset = 0.0
@@ -54,6 +59,7 @@ drawCode xs = G.pictures $ concat [
           innerGuardOffset = leftBitsOffset + w * fromIntegral (length leftBits)
           rightBitsOffset = innerGuardOffset + w * fromIntegral (length innerGuard)
           rightGuardOffset = rightBitsOffset + w * fromIntegral (length rightBits)
+          totalWidth = rightGuardOffset + w * fromIntegral (length rightGuard)
 
 -- | Draw a bit.
 -- Char c: '0'/'1'
