@@ -2,7 +2,9 @@
 module Encoder (textEncode, guiEncode) where
 
 import qualified EAN13
+
 import Data.List (intercalate)
+import qualified Graphics.Gloss as G
 
 
 internalEncode :: [Int] -> Either String [String]
@@ -20,13 +22,14 @@ textEncode xs = case internalEncode xs of
                     Right ys -> toHumanReadable ys
                     Left err -> err
 
-guiEncode :: [Int] -> IO String
+guiEncode :: [Int] -> IO ()
 guiEncode xs = do 
     case internalEncode xs of
         Right ys -> do 
+                       putStrLn $ toHumanReadable ys
                        guiShow ys
-                       return $ toHumanReadable ys
-        Left err -> return err
+        Left err -> putStrLn err
 
 guiShow :: [String] -> IO ()
-guiShow _ = return ()
+guiShow _ = do
+    G.display (G.InWindow "EAN13" (100, 100) (10, 10)) G.white G.blank
