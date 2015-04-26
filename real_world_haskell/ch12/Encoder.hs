@@ -36,15 +36,17 @@ guiShow xs = do
 
 drawCode :: [String] -> G.Picture
 drawCode xs = G.pictures $ concat [
-                drawBits leftGuard w guardH leftGuardOffset
-              , drawBits leftBits w bitH leftBitsOffset
-              , drawBits innerGuard w guardH innerGuardOffset
-              , drawBits rightBits w bitH rightBitsOffset
-              , drawBits rightGuard w guardH rightGuardOffset
+                drawBits leftGuard w guardH leftGuardOffset guardYO
+              , drawBits leftBits w bitH leftBitsOffset bitYO
+              , drawBits innerGuard w guardH innerGuardOffset guardYO
+              , drawBits rightBits w bitH rightBitsOffset bitYO
+              , drawBits rightGuard w guardH rightGuardOffset guardYO
               ]
     where w = 2
           bitH = 120
+          bitYO = 0
           guardH = bitH * 1.2
+          guardYO = - (guardH - bitH) / 2
 
           (leftGuard, leftBits, innerGuard, rightBits, rightGuard) = toBits xs
           leftGuardOffset = 0.0
@@ -58,8 +60,9 @@ drawCode xs = G.pictures $ concat [
 -- width: w
 -- height: h
 -- x offset: xo
-drawBit :: Char -> Float -> Float -> Float -> G.Picture
-drawBit c w h xo = G.color color $ G.translate xo 0 $ G.rectangleSolid w h
+-- y offset: yo
+drawBit :: Char -> Float -> Float -> Float -> Float -> G.Picture
+drawBit c w h xo yo = G.color color $ G.translate xo yo $ G.rectangleSolid w h
                 where color = if c == '0'
                               then G.white
                               else G.black
@@ -69,9 +72,10 @@ drawBit c w h xo = G.color color $ G.translate xo 0 $ G.rectangleSolid w h
 -- width: w
 -- height: h
 -- x offset: xo
-drawBits :: String -> Float -> Float -> Float -> [G.Picture]
-drawBits [] _ _ _ = []
-drawBits (c:xs) w h xo = drawBit c w h xo : drawBits xs w h (xo + w)
+-- y offset: yo
+drawBits :: String -> Float -> Float -> Float -> Float -> [G.Picture]
+drawBits [] _ _ _ _ = []
+drawBits (c:xs) w h xo yo = drawBit c w h xo yo : drawBits xs w h (xo + w) yo
 
 -- | Split bits
 -- Split a given EAN13 bar code to

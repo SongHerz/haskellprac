@@ -1,6 +1,7 @@
 module Main where
 
 import System.Environment (getArgs)
+import Data.List (groupBy)
 import qualified Encoder
 
 main = do
@@ -9,7 +10,7 @@ main = do
     showEncoding (not.null $ args) $ line2Digits line
     where showEncoding sel = if sel then showGUIEncoding else showTextEncoding 
           line2Digits :: String -> [Int]
-          line2Digits line = map read $ words line
+          line2Digits line = map read $ groupBy (\_ _ -> False) line
 
 showTextEncoding :: [Int] -> IO ()
 showTextEncoding xs = putStrLn $ Encoder.textEncode xs
