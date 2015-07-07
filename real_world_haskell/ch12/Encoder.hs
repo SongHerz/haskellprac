@@ -7,7 +7,7 @@ import Data.List (intercalate)
 import qualified Graphics.Gloss as G
 
 
-internalEncode :: [Int] -> Either String [String]
+internalEncode :: [Int] -> Either String ([String], Int)
 internalEncode xs
     | length xs == 12 = Right $ EAN13.encodeDigits xs
     | otherwise       = Left $ "Code length should be 12, but given code length is " ++ show (length xs)
@@ -19,28 +19,33 @@ toHumanReadable = intercalate ", "
 
 textEncode :: [Int] -> String
 textEncode xs = case internalEncode xs of
-                    Right ys -> toHumanReadable ys
+                    Right (ys, _) -> toHumanReadable ys
                     Left err -> err
 
 guiEncode :: [Int] -> IO ()
 guiEncode xs = do 
     case internalEncode xs of
-        Right ys -> do 
+        Right (ys, cs) -> do 
                        putStrLn $ toHumanReadable ys
-                       guiShow ys
+                       guiShow xs ys cs
         Left err -> putStrLn err
 
-guiShow :: [String] -> IO ()
-guiShow xs = do
+-- | Show the EAN13 barcode in a window.
+-- xs: 12 digits list
+-- ys: '0/1' string list including guards.
+-- cs: checksum of xs
+guiShow :: [Int] ->[String] -> Int -> IO ()
+guiShow xs ys cs = do
     G.display (G.InWindow "EAN13" (ceiling w + 20, ceiling h + 20) (10, 10)) G.white pic
-    where (pic, w, h) = drawCode xs
+    where (pic, w, h) = drawCode ys
 
 -- | Draw picture of a EAN13 barcode.
 -- Return the picture, and width and height of it.
 drawCode :: [String] -> (G.Picture, Float, Float)
 drawCode xs = (pic, totalWidth, guardH)
     where pic = G.translate (- totalWidth / 2) 0 $ G.pictures $ concat [
-                drawBits leftGuard w guardH leftGuardOffset guardYO
+                drawBits leftMostBits w bitH leftMostBitsOffset bitYO
+              , drawBits leftGuard w guardH leftGuardOffset guardYO
               , drawBits leftBits w bitH leftBitsOffset bitYO
               , drawBits innerGuard w guardH innerGuardOffset guardYO
               , drawBits rightBits w bitH rightBitsOffset bitYO
@@ -53,8 +58,11 @@ drawCode xs = (pic, totalWidth, guardH)
           guardH = bitH * 1.2
           guardYO = 0
 
+          leftMostBits = "0000000"
           (leftGuard, leftBits, innerGuard, rightBits, rightGuard) = toBits xs
-          leftGuardOffset = 0.0
+
+          leftMostBitsOffset = 0.0
+          leftGuardOffset = leftMostBitsOffset + w * fromIntegral (length leftMostBits)
           leftBitsOffset = leftGuardOffset + w * fromIntegral (length leftGuard)
           innerGuardOffset = leftBitsOffset + w * fromIntegral (length leftBits)
           rightBitsOffset = innerGuardOffset + w * fromIntegral (length innerGuard)

@@ -112,13 +112,14 @@ foldA1 f a = foldl1' f $ elems a
 
 -- | This function computes the barcode with given 12 digits,
 -- the last checksum is computed by it.
-encodeDigits :: [Int] -> [String]
+encodeDigits :: [Int] -> ([String], Int)
 encodeDigits s@(first:rest) =
-    outerGuard : lefties ++ centerGuard : righties ++ [outerGuard]
+    (outerGuard : lefties ++ centerGuard : righties ++ [outerGuard], checksum)
     -- The book 'splitAt 5' has a bug, it should be '6' as below.
     where (left, right) = splitAt 6 rest
           lefties = zipWith leftEncode (leftParityCodes ! first) left
-          righties = map rightEncode (right ++ [checkDigit s])
+          righties = map rightEncode (right ++ [checksum])
+          checksum = checkDigit s
 
 leftEncode :: Char -> Int -> String
 leftEncode '1' = (leftOddCodes !)
