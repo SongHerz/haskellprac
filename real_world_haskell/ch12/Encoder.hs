@@ -4,6 +4,7 @@ module Encoder (textEncode, guiEncode) where
 import qualified EAN13
 
 import Data.List (intercalate)
+import Data.Char (intToDigit)
 import qualified Graphics.Gloss as G
 
 
@@ -37,14 +38,17 @@ guiEncode xs = do
 guiShow :: [Int] ->[String] -> Int -> IO ()
 guiShow xs ys cs = do
     G.display (G.InWindow "EAN13" (ceiling w + 20, ceiling h + 20) (10, 10)) G.white pic
-    where (pic, w, h) = drawCode ys
+    where (pic, w, h) = drawCode xs cs ys
 
 -- | Draw picture of a EAN13 barcode.
+-- xs: 12 digits list.
+-- cs: the checksum digit.
+-- ys: The string list that contains digits and guards.
 -- Return the picture, and width and height of it.
-drawCode :: [String] -> (G.Picture, Float, Float)
-drawCode xs = (pic, totalWidth, guardH)
+drawCode :: [Int] -> Int -> [String] -> (G.Picture, Float, Float)
+drawCode xs cs ys = (pic, totalWidth, guardH)
     where pic = G.translate (- totalWidth / 2) 0 $ G.pictures $ concat [
-                drawBits leftMostBits w bitH leftMostBitsOffset bitYO
+                drawBitsDigit leftMostBits w bitH (head xs) digitH digitH leftMostBitsOffset bitYO
               , drawBits leftGuard w guardH leftGuardOffset guardYO
               , drawBits leftBits w bitH leftBitsOffset bitYO
               , drawBits innerGuard w guardH innerGuardOffset guardYO
@@ -57,9 +61,10 @@ drawCode xs = (pic, totalWidth, guardH)
           bitYO = (guardH - bitH) / 2
           guardH = bitH * 1.2
           guardYO = 0
+          digitH = guardH - bitH
 
           leftMostBits = "0000000"
-          (leftGuard, leftBits, innerGuard, rightBits, rightGuard) = toBits xs
+          (leftGuard, leftBits, innerGuard, rightBits, rightGuard) = toBits ys
 
           leftMostBitsOffset = 0.0
           leftGuardOffset = leftMostBitsOffset + w * fromIntegral (length leftMostBits)
@@ -90,6 +95,21 @@ drawBit c w h xo yo = G.color color $ G.translate xo yo $ G.rectangleSolid w h
 drawBits :: String -> Float -> Float -> Float -> Float -> [G.Picture]
 drawBits [] _ _ _ _ = []
 drawBits (c:xs) w h xo yo = drawBit c w h xo yo : drawBits xs w h (xo + w) yo
+
+-- | Draw bits with a digit.
+-- With given '0'/'1' string
+-- bit width: bw
+-- bit height: bh
+-- d: a digit
+-- digit width: dw
+-- digit height: dh
+-- x offset: xo
+-- y offset: yo
+drawBitsDigit :: String -> Float -> Float -> Int -> Float -> Float -> Float -> Float -> [G.Picture]
+drawBitsDigit xs bw bh d dw dh xo yo = digitPic : drawBits xs bw bh xo yo
+    where fontDefaultHeight = 100.0
+          fontZoomRatio = dh / fontDefaultHeight
+          digitPic = G.translate xo (yo - bh / 2 - dh) $ G.scale fontZoomRatio fontZoomRatio $ G.text [intToDigit d]
 
 -- | Split bits
 -- Split a given EAN13 bar code to
