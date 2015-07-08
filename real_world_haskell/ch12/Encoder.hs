@@ -120,8 +120,10 @@ drawBitsDigit xs bw bh d dh xo yo = (totalWidth, digitPic : bitsPics)
 
           fontDefaultWidth = 100.0
           fontDefaultHeight = 100.0
+          fontGap = 0.2 * dh
+          fontHeight = dh - fontGap
           fontZoomRatioW = totalWidth / fontDefaultWidth
-          fontZoomRatioH = dh / fontDefaultHeight
+          fontZoomRatioH = fontHeight / fontDefaultHeight
           digitPic = G.translate xo (yo - bh / 2 - dh) $ G.scale fontZoomRatioW fontZoomRatioH $ G.text [intToDigit d]
 
 -- | Draw bits digit pairs
