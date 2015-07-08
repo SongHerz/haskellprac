@@ -48,12 +48,7 @@ guiShow xs ys cs = do
 drawCode :: [Int] -> Int -> [String] -> (G.Picture, Float, Float)
 drawCode xs cs ys = (pic, totalWidth, guardH)
     where pic = G.translate (- totalWidth / 2) 0 $ G.pictures $ concat [
-                drawBitsDigitSeries [(leftMostBits, leftMostDigit)] w bitH digitW digitH leftMostBitsOffset bitYO
-              , drawBits leftGuard w guardH leftGuardOffset guardYO
-              , drawBitsDigitSeries (zip leftBits leftDigits) w bitH digitW digitH leftBitsOffset bitYO
-              , drawBits innerGuard w guardH innerGuardOffset guardYO
-              , drawBitsDigitSeries (zip rightBits rightDigits) w bitH digitW digitH rightBitsOffset bitYO
-              , drawBits rightGuard w guardH rightGuardOffset guardYO
+              leftMostBitsPics, leftGuardPics, leftBitsPics, innerGuardPics, rightBitsPics, rightGuardPics
               ]
 
           w = 2
@@ -62,19 +57,30 @@ drawCode xs cs ys = (pic, totalWidth, guardH)
           guardH = bitH * 1.2
           guardYO = 0
           digitH = guardH - bitH
-          digitW = w * 7.0
 
           leftMostBits = "0000000"
           (leftGuard, leftBits, innerGuard, rightBits, rightGuard) = toBits ys
           (leftMostDigit, leftDigits, rightDigits) = toDigits xs cs
-
+          
           leftMostBitsOffset = 0.0
-          leftGuardOffset = leftMostBitsOffset + w * fromIntegral (length leftMostBits)
-          leftBitsOffset = leftGuardOffset + w * fromIntegral (length leftGuard)
-          innerGuardOffset = leftBitsOffset + w * fromIntegral (sum $ map length leftBits)
-          rightBitsOffset = innerGuardOffset + w * fromIntegral (length innerGuard)
-          rightGuardOffset = rightBitsOffset + w * fromIntegral (sum $ map length rightBits)
-          totalWidth = rightGuardOffset + w * fromIntegral (length rightGuard)
+          (leftMostBitsWidth, leftMostBitsPics) = drawBitsDigitSeries [(leftMostBits, leftMostDigit)] w bitH digitH leftMostBitsOffset bitYO
+
+          leftGuardOffset = leftMostBitsOffset + leftMostBitsWidth
+          (leftGuardWidth, leftGuardPics) = drawBits leftGuard w guardH leftGuardOffset guardYO
+
+          leftBitsOffset = leftGuardOffset + leftGuardWidth
+          (leftBitsWidth, leftBitsPics) = drawBitsDigitSeries (zip leftBits leftDigits) w bitH digitH leftBitsOffset bitYO
+
+          innerGuardOffset = leftBitsOffset + leftBitsWidth
+          (innerGuardWidth, innerGuardPics) = drawBits innerGuard w guardH innerGuardOffset guardYO
+
+          rightBitsOffset = innerGuardOffset + innerGuardWidth
+          (rightBitsWidth, rightBitsPics) = drawBitsDigitSeries (zip rightBits rightDigits) w bitH digitH rightBitsOffset bitYO
+
+          rightGuardOffset = rightBitsOffset + rightBitsWidth
+          (rightGuardWidth, rightGuardPics) = drawBits rightGuard w guardH rightGuardOffset guardYO
+
+          totalWidth = rightGuardOffset + rightGuardWidth
 
 -- | Draw a bit.
 -- Char c: '0'/'1'
@@ -94,39 +100,41 @@ drawBit c w h xo yo = G.color color $ G.translate xo yo $ G.rectangleSolid w h
 -- height: h
 -- x offset: xo
 -- y offset: yo
-drawBits :: String -> Float -> Float -> Float -> Float -> [G.Picture]
-drawBits [] _ _ _ _ = []
-drawBits (c:xs) w h xo yo = drawBit c w h xo yo : drawBits xs w h (xo + w) yo
+drawBits :: String -> Float -> Float -> Float -> Float -> (Float, [G.Picture])
+drawBits [] _ _ _ _ = (0, [])
+drawBits (c:xs) w h xo yo = (w + restW, thisPic : restPics)
+    where thisPic = drawBit c w h xo yo
+          (restW, restPics) = drawBits xs w h (xo + w) yo
 
 -- | Draw bits with a digit.
 -- With given '0'/'1' string
 -- bit width: bw
 -- bit height: bh
 -- d: a digit
--- digit width: dw
 -- digit height: dh
 -- x offset: xo
 -- y offset: yo
-drawBitsDigit :: String -> Float -> Float -> Int -> Float -> Float -> Float -> Float -> [G.Picture]
-drawBitsDigit xs bw bh d dw dh xo yo = digitPic : drawBits xs bw bh xo yo
-    where fontDefaultWidth = 100.0
+drawBitsDigit :: String -> Float -> Float -> Int -> Float -> Float -> Float -> (Float, [G.Picture])
+drawBitsDigit xs bw bh d dh xo yo = (totalWidth, digitPic : bitsPics)
+    where (totalWidth, bitsPics) = drawBits xs bw bh xo yo
+
+          fontDefaultWidth = 100.0
           fontDefaultHeight = 100.0
-          fontZoomRatioW = dw / fontDefaultWidth
+          fontZoomRatioW = totalWidth / fontDefaultWidth
           fontZoomRatioH = dh / fontDefaultHeight
           digitPic = G.translate xo (yo - bh / 2 - dh) $ G.scale fontZoomRatioW fontZoomRatioH $ G.text [intToDigit d]
 
 -- | Draw bits digit pairs
 -- bit width: bw
 -- bit height: bh
--- digit width: dw
 -- digit height: dh
 -- x offset: xo
 -- y offset: yo
-drawBitsDigitSeries :: [(String, Int)] -> Float -> Float -> Float -> Float -> Float -> Float -> [G.Picture]
-drawBitsDigitSeries [] _ _ _ _ _ _ = []
-drawBitsDigitSeries ((xs, d) : rest) bw bh dw dh xo yo =
-    drawBitsDigit xs bw bh d dw dh xo yo ++ others 
-    where others = drawBitsDigitSeries rest bw bh dw dh (xo + (bw * (fromIntegral $ length xs))) yo
+drawBitsDigitSeries :: [(String, Int)] -> Float -> Float -> Float -> Float -> Float -> (Float, [G.Picture])
+drawBitsDigitSeries [] _ _ _ _ _ = (0, [])
+drawBitsDigitSeries ((xs, d) : rest) bw bh dh xo yo = (thisW + restW, thisPics ++ restPics)
+    where (thisW, thisPics) = drawBitsDigit xs bw bh d dh xo yo
+          (restW, restPics) = drawBitsDigitSeries rest bw bh dh (xo + (bw * (fromIntegral $ length xs))) yo
 
 -- | Split bits
 -- Split a given EAN13 bar code to
