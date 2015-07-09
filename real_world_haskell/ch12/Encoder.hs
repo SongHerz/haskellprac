@@ -23,6 +23,51 @@ textEncode xs = case internalEncode xs of
                     Right (ys, _) -> toHumanReadable ys
                     Left err -> err
 
+data Bar = PureBar String
+         | DigitBar String Int
+
+data BarCode = BarCode {
+      height            :: Float
+    , bitWidth          :: Float
+    , digitHeightRatio  :: Float
+    , bars              :: [Bar]
+    }
+
+-- | Convert digits and strings to BarCode
+-- xs : 12 digits list
+-- ys: '0/1' stringlist including guards
+-- cs: checksum of xs
+toBarCode :: [Int] -> [String] -> Int -> Float -> Float -> Float -> BarCode
+toBarCode xs ys cs h bw dhr = BarCode {
+      height = h
+    , bitWidth = bw
+    , digitHeightRatio = dhr
+    , bars = concat [
+              [DigitBar leftMostBits leftMostDigit]
+            , [PureBar leftGuard]
+            , zipWith DigitBar leftBits leftDigits
+            , [PureBar innerGuard]
+            , zipWith DigitBar rightBits rightDigits
+            , [PureBar rightGuard]]
+            }
+    where leftMostBits = "0000000"
+          (leftGuard, leftBits, innerGuard, rightBits, rightGuard) = toBits ys
+          (leftMostDigit, leftDigits, rightDigits) =  toDigits xs cs
+
+-- | Draw BarCode as a picture
+-- Return (width, height, Picture)
+drawBarCode :: BarCode -> (Float, Float, G.Picture)
+drawBarCode bc = (width, height bc, G.translate (- width / 2) 0 $ G.pictures $ concat picsList)
+    where (width, picsList) = foldl step (0, []) (bars bc)
+          step :: (Float, [[G.Picture]]) -> Bar -> (Float, [[G.Picture]])
+          step (accW, accPicsList) b = (width + accW, pics : accPicsList)
+              where (width, pics) = drawBar bc b accW
+
+-- | Draw a bar
+drawBar :: BarCode -> Bar -> Float -> (Float, [G.Picture])
+drawBar bc (PureBar xs) xo = drawBits xs (bitWidth bc) (height bc) xo 0
+drawBar bc (DigitBar xs d) xo = drawBitsDigit xs (bitWidth bc) (height bc) d (digitHeightRatio bc) xo 0
+
 guiEncode :: [Int] -> IO ()
 guiEncode xs = do 
     case internalEncode xs of
@@ -38,49 +83,7 @@ guiEncode xs = do
 guiShow :: [Int] ->[String] -> Int -> IO ()
 guiShow xs ys cs = do
     G.display (G.InWindow "EAN13" (ceiling w + 20, ceiling h + 20) (10, 10)) G.white pic
-    where (pic, w, h) = drawCode xs cs ys
-
--- | Draw picture of a EAN13 barcode.
--- xs: 12 digits list.
--- cs: the checksum digit.
--- ys: The string list that contains digits and guards.
--- Return the picture, and width and height of it.
-drawCode :: [Int] -> Int -> [String] -> (G.Picture, Float, Float)
-drawCode xs cs ys = (pic, totalWidth, guardH)
-    where pic = G.translate (- totalWidth / 2) 0 $ G.pictures $ concat [
-              leftMostBitsPics, leftGuardPics, leftBitsPics, innerGuardPics, rightBitsPics, rightGuardPics
-              ]
-
-          w = 2
-          bitH = 120
-          bitYO = (guardH - bitH) / 2
-          guardH = bitH * 1.2
-          guardYO = 0
-          digitH = guardH - bitH
-
-          leftMostBits = "0000000"
-          (leftGuard, leftBits, innerGuard, rightBits, rightGuard) = toBits ys
-          (leftMostDigit, leftDigits, rightDigits) = toDigits xs cs
-          
-          leftMostBitsOffset = 0.0
-          (leftMostBitsWidth, leftMostBitsPics) = drawBitsDigitSeries [(leftMostBits, leftMostDigit)] w bitH digitH leftMostBitsOffset bitYO
-
-          leftGuardOffset = leftMostBitsOffset + leftMostBitsWidth
-          (leftGuardWidth, leftGuardPics) = drawBits leftGuard w guardH leftGuardOffset guardYO
-
-          leftBitsOffset = leftGuardOffset + leftGuardWidth
-          (leftBitsWidth, leftBitsPics) = drawBitsDigitSeries (zip leftBits leftDigits) w bitH digitH leftBitsOffset bitYO
-
-          innerGuardOffset = leftBitsOffset + leftBitsWidth
-          (innerGuardWidth, innerGuardPics) = drawBits innerGuard w guardH innerGuardOffset guardYO
-
-          rightBitsOffset = innerGuardOffset + innerGuardWidth
-          (rightBitsWidth, rightBitsPics) = drawBitsDigitSeries (zip rightBits rightDigits) w bitH digitH rightBitsOffset bitYO
-
-          rightGuardOffset = rightBitsOffset + rightBitsWidth
-          (rightGuardWidth, rightGuardPics) = drawBits rightGuard w guardH rightGuardOffset guardYO
-
-          totalWidth = rightGuardOffset + rightGuardWidth
+    where (w, h, pic) = drawBarCode $ toBarCode xs ys cs 120 2 (0.2/1.2)
 
 -- | Draw a bit.
 -- Char c: '0'/'1'
@@ -109,14 +112,18 @@ drawBits (c:xs) w h xo yo = (w + restW, thisPic : restPics)
 -- | Draw bits with a digit.
 -- With given '0'/'1' string
 -- bit width: bw
--- bit height: bh
+-- height: h
 -- d: a digit
--- digit height: dh
+-- digit height ratio: dhr
 -- x offset: xo
 -- y offset: yo
 drawBitsDigit :: String -> Float -> Float -> Int -> Float -> Float -> Float -> (Float, [G.Picture])
-drawBitsDigit xs bw bh d dh xo yo = (totalWidth, digitPic : bitsPics)
-    where (totalWidth, bitsPics) = drawBits xs bw bh xo yo
+drawBitsDigit xs bw h d dhr xo yo = (totalWidth, digitPic : bitsPics)
+    where (totalWidth, bitsPics) = drawBits xs bw bh xo byo
+          bh = h - dh
+          dh = h * dhr
+          -- bar y offset
+          byo = yo + (h - bh) / 2
 
           fontDefaultWidth = 100.0
           fontDefaultHeight = 100.0
@@ -124,19 +131,7 @@ drawBitsDigit xs bw bh d dh xo yo = (totalWidth, digitPic : bitsPics)
           fontHeight = dh - fontGap
           fontZoomRatioW = totalWidth / fontDefaultWidth
           fontZoomRatioH = fontHeight / fontDefaultHeight
-          digitPic = G.translate xo (yo - bh / 2 - dh) $ G.scale fontZoomRatioW fontZoomRatioH $ G.text [intToDigit d]
-
--- | Draw bits digit pairs
--- bit width: bw
--- bit height: bh
--- digit height: dh
--- x offset: xo
--- y offset: yo
-drawBitsDigitSeries :: [(String, Int)] -> Float -> Float -> Float -> Float -> Float -> (Float, [G.Picture])
-drawBitsDigitSeries [] _ _ _ _ _ = (0, [])
-drawBitsDigitSeries ((xs, d) : rest) bw bh dh xo yo = (thisW + restW, thisPics ++ restPics)
-    where (thisW, thisPics) = drawBitsDigit xs bw bh d dh xo yo
-          (restW, restPics) = drawBitsDigitSeries rest bw bh dh (xo + (bw * (fromIntegral $ length xs))) yo
+          digitPic = G.translate xo (byo - bh / 2 - dh) $ G.scale fontZoomRatioW fontZoomRatioH $ G.text [intToDigit d]
 
 -- | Split bits
 -- Split a given EAN13 bar code to
