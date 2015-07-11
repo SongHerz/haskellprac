@@ -3,14 +3,37 @@ module Main where
 import System.Environment (getArgs)
 import Data.List (groupBy)
 import qualified Encoder
+import Options.Applicative
 
-main = do
-    args <- getArgs
-    line <- getLine
-    showEncoding (not.null $ args) $ line2Digits line
-    where showEncoding sel = if sel then showGUIEncoding else showTextEncoding 
-          line2Digits :: String -> [Int]
-          line2Digits line = map read $ groupBy (\_ _ -> False) line
+data Config = Config {
+      _12Digits :: String
+    , gui :: Bool
+    }
+
+config :: Parser Config
+config = Config
+    <$> strOption (
+           short 'd'
+        <> metavar "12DIGITS"
+        <> help "12 digits for EAN13 coding")
+    <*> switch (
+           long "gui"
+        <> help "Show in GUI, when enabled")
+
+opts = info (helper <*> config) (
+               fullDesc
+            <> progDesc "Encode 12 digits to EAN13 bar code"
+            <> header "EAN13 encoder")
+
+
+showEncoding :: Config -> IO ()
+showEncoding (Config xs gui) =
+    case gui of
+        False -> showTextEncoding digits
+        True  -> showGUIEncoding digits
+    where digits = map read $ groupBy (\_ _ -> False) xs
+
+main = execParser opts >>= showEncoding
 
 showTextEncoding :: [Int] -> IO ()
 showTextEncoding xs = putStrLn $ Encoder.textEncode xs
