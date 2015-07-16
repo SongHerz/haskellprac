@@ -2,7 +2,7 @@
 -- For details of EAN-13 barcode.
 module EAN13 (encodeDigits) where
 
-import Data.List (foldl', foldl1')
+import Data.List (foldl', foldl1', group)
 import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems)
 import Control.Applicative ((<$>))
 import Greymap (Greymap, greymap2Array)
@@ -146,3 +146,14 @@ threshold n a = binary <$> a
           least = fromIntegral $ choose (<) a
           choose f = foldA1 $ \x y -> if f x y then x else y
 
+type Run = Int
+type RunLength a = [(Run, a)]
+
+runLength :: Eq a => [a] -> RunLength a
+runLength = map rle . group
+    where rle xs = (length xs, head xs)
+
+-- Assume the first bit is always 0,
+-- the actual bit value could be omitted.
+runLengths :: Eq a => [a] -> [Run]
+runLengths = map fst . runLength
