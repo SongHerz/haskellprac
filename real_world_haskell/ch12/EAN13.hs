@@ -5,6 +5,7 @@ module EAN13 (encodeDigits) where
 import Data.List (foldl', foldl1')
 import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems)
 import Control.Applicative ((<$>))
+import Greymap (Greymap, greymap2Array)
 
 -- http://www.gs1.org/check-digit-calculator
 -- 978354004934(0)
@@ -127,4 +128,21 @@ leftEncode '0' = (leftEvenCodes !)
 
 rightEncode :: Int -> String
 rightEncode = (rightEvenCodes !)
+
+
+
+-- -----------------------
+-- Barcode Recognization
+-- -----------------------
+data Bit = Zero | One
+           deriving (Eq, Show)
+
+threshold :: (Ix k, Integral a) => Double -> Array k a -> Array k Bit
+threshold n a = binary <$> a
+    where binary i | i < pivot = Zero
+                   | otherwise = One
+          pivot = round $ least + (greatest - least) * n
+          greatest = fromIntegral $ choose (>) a
+          least = fromIntegral $ choose (<) a
+          choose f = foldA1 $ \x y -> if f x y then x else y
 
