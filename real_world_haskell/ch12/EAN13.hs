@@ -4,6 +4,7 @@ module EAN13 (encodeDigits) where
 
 import Data.List (foldl', foldl1', group)
 import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems)
+import Data.Ratio (Ratio, (%))
 import Control.Applicative ((<$>))
 import Greymap (Greymap, greymap2Array)
 
@@ -157,3 +158,26 @@ runLength = map rle . group
 -- the actual bit value could be omitted.
 runLengths :: Eq a => [a] -> [Run]
 runLengths = map fst . runLength
+
+type Score = Ratio Int
+
+scaleToOne :: [Run] -> [Score]
+scaleToOne xs = map divide xs
+    where divide d = fromIntegral d / divisor
+          divisor = fromIntegral (sum xs)
+-- Another version
+-- scaleToOne = map (% sum xs) xs
+
+type ScoreTable = [[Score]]
+
+-- "SRL" means "scaled run length".
+asSRL :: [String] -> ScoreTable
+asSRL = map (scaleToOne . runLengths)
+
+leftOddSRL = asSRL leftOddList
+leftEvenSRL = asSRL leftEvenList
+rightEvenSRL = asSRL rightEvenList
+leftParitySRL = asSRL leftParityList
+
+distance :: [Score] -> [Score] -> Score
+distance a b = sum . map abs $ zipWith (-) a b
