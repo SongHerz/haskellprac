@@ -2,11 +2,12 @@
 -- For details of EAN-13 barcode.
 module EAN13 (encodeDigits) where
 
-import Data.List (foldl', foldl1', group)
+import Data.List (foldl', foldl1', group, sort, sortBy)
 import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems)
 import Data.Ratio (Ratio, (%))
 import Control.Applicative ((<$>))
 import Greymap (Greymap, greymap2Array)
+import Data.Word (Word8)
 
 -- http://www.gs1.org/check-digit-calculator
 -- 978354004934(0)
@@ -169,6 +170,7 @@ scaleToOne xs = map divide xs
 -- scaleToOne = map (% sum xs) xs
 
 type ScoreTable = [[Score]]
+type Digit = Word8
 
 -- "SRL" means "scaled run length".
 asSRL :: [String] -> ScoreTable
@@ -181,3 +183,50 @@ leftParitySRL = asSRL leftParityList
 
 distance :: [Score] -> [Score] -> Score
 distance a b = sum . map abs $ zipWith (-) a b
+
+bestScores :: ScoreTable -> [Run] -> [(Score, Digit)]
+bestScores srl ps = take 3 . sort $ scores
+    where scores = zip [distance d (scaleToOne ps) | d <- srl] digits
+          digits = [0..9]
+
+
+data Parity a = Even a | Odd a | None a
+                deriving (Show)
+
+fromParity :: Parity a -> a
+fromParity (Even a) = a
+fromParity (Odd a) = a
+fromParity (None a) = a
+
+parityMap :: (a -> b) -> Parity a -> Parity b
+parityMap f (Even a) = Even $ f a
+parityMap f (Odd a) = Odd $ f a
+parityMap f (None a) = None $ f a
+
+instance Functor Parity where
+    fmap = parityMap
+
+-- Also defined in Data.Function
+on :: (a -> a -> b) -> (c -> a) -> c -> c -> b
+f `on` g = \x y -> g x `f` g y
+
+compareWithoutParity :: Ord a => Parity a -> Parity a -> Ordering
+compareWithoutParity = compare `on` fromParity
+
+-- Decode for a single digit
+bestLeft :: [Run] -> [Parity (Score, Digit)]
+bestLeft ps = sortBy compareWithoutParity
+              ((map Odd (bestScores leftOddSRL ps)) ++
+               (map Even (bestScores leftEvenSRL ps)))
+
+-- Decode for a single digit
+bestRight :: [Run] -> [Parity (Score, Digit)]
+bestRight = map None . bestScores rightEvenSRL
+
+chunkWith :: ([a] -> ([a], [a])) -> [a] -> [[a]]
+chunkWith _ [] = []
+chunkWith f xs = let (h, t) = f xs
+                 in h : chunkWith f t
+
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf n = chunkWith $ splitAt n
