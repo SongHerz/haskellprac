@@ -230,3 +230,25 @@ chunkWith f xs = let (h, t) = f xs
 
 chunksOf :: Int -> [a] -> [[a]]
 chunksOf n = chunkWith $ splitAt n
+
+-- E.g.
+-- let digits = encodeDigits $ map digitToInt "978013211467"
+-- let input = zip (runLengths . concat $ fst digits) (cycle [Zero, One])
+-- candidateDigits input
+--
+-- [[Odd 7,Even 1,Even 2,Odd 3,Even 4,Odd 8],[Even 8,Odd 0,Odd 1,Odd 2,Even
+-- 6,Even 7],[Even 0,Even 1,Odd 2,Odd 4,Odd 6,Even 9],[Odd 1,Odd 0,Even
+-- 1,Odd 2,Even 2,Even 4],[Even 3,Odd 4,Odd 5,Even 7,Even 0,Odd 1],[Odd
+-- 2,Even 0,Odd 1,Even 1,Even 2,Odd 4],[None 1,None 0,None 2],[None 1,None
+-- 0,None 2],[None 4,None 2,None 5],[None 6,None 8,None 2],[None 7,None
+-- 3,None 8],[None 7,None 3,None 8]]
+candidateDigits :: RunLength Bit -> [[Parity Digit]]
+candidateDigits ((_, One):_) = []
+candidateDigits rle | length rle < 59 = []
+candidateDigits rle
+    | any null match = []
+    | otherwise = map (map (fmap snd)) match
+    where match = map bestLeft left ++ map bestRight right
+          left = chunksOf 4 . take 24 . drop 3 $ runLengths
+          right = chunksOf 4 . take 24 . drop 32 $ runLengths
+          runLengths = map fst rle
