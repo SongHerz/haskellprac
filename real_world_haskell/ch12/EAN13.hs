@@ -250,9 +250,13 @@ candidateDigits rle
     | any null match = []
     | otherwise = map (map (fmap snd)) match
     where match = map bestLeft left ++ map bestRight right
-          left = chunksOf 4 . take 24 . drop 3 $ runLengths
-          right = chunksOf 4 . take 24 . drop 32 $ runLengths
-          runLengths = map fst rle
+          -- Drop left guard, take 6 left digits, and split into chunks of
+          -- 4.
+          left = chunksOf 4 . take (4 * 6) . drop 3 $ helperRunLengths :: [[Run]]
+          -- Drop (left guard + 6 left digits + inner guard), take 6 right
+          -- digits, and split into chunks of 4.
+          right = chunksOf 4 . take (4 * 6) . drop (3 + 4 * 6 + 5) $ helperRunLengths :: [[Run]]
+          helperRunLengths = map fst rle
 
 type CheckMap a = M.Map Digit [a]
 type DigitMap = CheckMap Digit
