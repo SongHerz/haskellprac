@@ -249,7 +249,7 @@ candidateDigits rle | length rle < 59 = []
 candidateDigits rle
     | any null match = []
     | otherwise = map (map (fmap snd)) match
-    where match = map bestLeft left ++ map bestRight right
+    where match = map bestLeft left ++ map bestRight right :: [[Parity (Score, Digit)]]
           -- Drop left guard, take 6 left digits, and split into chunks of
           -- 4.
           left = chunksOf 4 . take (4 * 6) . drop 3 $ helperRunLengths :: [[Run]]
