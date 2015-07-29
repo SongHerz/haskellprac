@@ -5,6 +5,7 @@ module EAN13 (encodeDigits) where
 import Data.List (foldl', foldl1', group, sort, sortBy)
 import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems)
 import Data.Ratio (Ratio, (%))
+import Data.Maybe (catMaybes)
 import Control.Applicative ((<$>))
 import Greymap (Greymap, greymap2Array)
 import Data.Word (Word8)
@@ -282,3 +283,34 @@ incorporateDigits old digits = foldl' (useDigit old) M.empty digits
 finalDigits :: [[Parity Digit]] -> ParityMap
 finalDigits = foldl' incorporateDigits (M.singleton 0 [])
             . mapEveryOther (map (fmap (*3)))
+
+firstDigit :: [Parity a] -> Digit
+firstDigit = snd
+           . head
+           . bestScores leftParitySRL
+           . runLengths
+           . map parityBit
+           . take 6
+           where parityBit (Even _) = Zero
+                 parityBit (Odd _) = One
+
+addFirstDigit :: ParityMap -> DigitMap
+addFirstDigit = M.foldWithKey updateFirst M.empty
+
+updateFirst :: Digit -> [Parity Digit] -> DigitMap -> DigitMap
+updateFirst key seq = insertMap key digit (digit:renormalize qes)
+    where renormalize = mapEveryOther (`div` 3) . map fromParity
+          digit = firstDigit qes
+          qes = reverse seq
+
+buildMap :: [[Parity Digit]] -> DigitMap
+buildMap = M.mapKeys (10 -)
+         . addFirstDigit
+         . finalDigits
+
+solve :: [[Parity Digit]] -> [[Digit]]
+solve [] = []
+solve xs = catMaybes $ map (addCheckDigit m) checkDigits
+    where checkDigits = map fromParity $ last xs
+          m = buildMap (init xs)
+          addCheckDigit m k = (++[k]) <$> M.lookup k m
