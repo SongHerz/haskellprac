@@ -2,10 +2,10 @@
 -- For details of EAN-13 barcode.
 module EAN13 (encodeDigits) where
 
-import Data.List (foldl', foldl1', group, sort, sortBy)
-import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems)
+import Data.List (foldl', foldl1', group, sort, sortBy, tails)
+import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems, ixmap)
 import Data.Ratio (Ratio, (%))
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, listToMaybe)
 import Control.Applicative ((<$>))
 import Greymap (Greymap, greymap2Array)
 import Data.Word (Word8)
@@ -314,3 +314,30 @@ solve xs = catMaybes $ map (addCheckDigit m) checkDigits
     where checkDigits = map fromParity $ last xs
           m = buildMap (init xs)
           addCheckDigit m k = (++[k]) <$> M.lookup k m
+
+type RGB = (Word8, Word8, Word8)
+type Pixmap = Array (Int, Int) RGB
+
+luminance :: RGB -> Word8
+luminance (r, g, b) = round(r' * 0.30 + g' * 0.59 + b' * 0.11)
+    where [r', g',  b'] = map fromIntegral [r, g, b]
+
+withRow :: Int -> Pixmap -> (RunLength Bit -> a) -> a
+withRow n greymap f = f . runLength . elems $ posterized
+    where posterized = threshold 0.4 . fmap luminance . row n $ greymap
+
+row :: (Ix a, Ix b) => b -> Array (a, b) c -> Array a c
+row j a = ixmap (l, u) project a
+    where project i = (i, j)
+          ((l, _), (u, _)) = bounds a
+
+findMatch :: [(Run, Bit)] -> Maybe [[Digit]]
+findMatch = listToMaybe
+            . filter (not . null)
+            . map (solve . candidateDigits)
+            . tails
+
+findEAN13 :: Pixmap -> Maybe [Digit]
+findEAN13 pixmap = withRow center pixmap (fmap head . findMatch)
+    where (_, (maxX, _)) = bounds pixmap
+          center = (maxX + 1) `div` 2
