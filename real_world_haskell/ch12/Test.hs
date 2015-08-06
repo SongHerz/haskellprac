@@ -1,8 +1,8 @@
 module Main where
 
 import Test.QuickCheck
+import Tests (prop_closeloop)
 
-prop_closeloop = True == True
 
 runTests :: Args -> IO ()
 runTests args = do

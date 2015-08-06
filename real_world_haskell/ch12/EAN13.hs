@@ -1,6 +1,10 @@
 -- Refer http://en.wikipedia.org/wiki/International_Article_Number_%28EAN%29
 -- For details of EAN-13 barcode.
-module EAN13 (encodeDigits) where
+module EAN13 (
+      RGB
+    , Pixmap
+    , encodeDigits
+    , findEAN13) where
 
 import Data.List (foldl', foldl1', group, sort, sortBy, tails)
 import Data.Array (Ix, Array(..), listArray, indices, (!), bounds, elems, ixmap)
