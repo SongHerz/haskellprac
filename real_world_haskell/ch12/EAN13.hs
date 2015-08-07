@@ -3,6 +3,7 @@
 module EAN13 (
       RGB
     , Pixmap
+    , Digit
     , encodeDigits
     , findEAN13) where
 
