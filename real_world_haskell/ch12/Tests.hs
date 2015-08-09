@@ -2,7 +2,7 @@ module Tests where
 
 import Test.QuickCheck
 import EAN13
-import Data.Array (array, listArray)
+import Data.Array (array)
 import Data.Char (digitToInt)
 
 -- Convert a digit char to RGB
