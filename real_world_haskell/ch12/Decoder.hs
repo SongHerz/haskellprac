@@ -32,16 +32,20 @@ internalDIToPm img f = array ((0, 0), (w - 1, h - 1)) [((x, y), f $ pixelAt img 
 
 pixelRGB8ToRGB (PixelRGB8 r g b) = (r, g, b) :: RGB
 -- https://en.wikipedia.org/wiki/YCbCr#JPEG_conversion
-pixelYCbCr8ToRGB (PixelYCbCr8 y cb cr) = (floor fr, floor fg, floor fb) :: RGB
-    where [fy, fcb, fcr] = map toRational [y, cb, cr]
-          fr = fy + 1.402 * (fcr - 128)
-          fg = fy - 0.34414 * (fcb - 128) - 0.71414 * (fcr - 128)
-          fb = fy + 1.772 * (fcb - 128)
+-- pixelYCbCr8ToRGB (PixelYCbCr8 y cb cr) = (floor fr, floor fg, floor fb) :: RGB
+--     where [fy, fcb, fcr] = map toRational [y, cb, cr]
+--           fr = fy + 1.402 * (fcr - 128)
+--           fg = fy - 0.34414 * (fcb - 128) - 0.71414 * (fcr - 128)
+--           fb = fy + 1.772 * (fcb - 128)
+pixelRGBA8ToRGB (PixelRGBA8 r g b a) = (floor fr, floor fg, floor fb) :: RGB
+    where [fr, fg, fb] = map ((k*) . toRational) [r, g, b]
+          k = (toRational a) / 255
 
 
 dynamicImageToPixmap :: DynamicImage -> Either String Pixmap
 dynamicImageToPixmap (ImageRGB8 img) = Right $ internalDIToPm img pixelRGB8ToRGB
-dynamicImageToPixmap (ImageYCbCr8 img) = Right $ internalDIToPm img pixelYCbCr8ToRGB
+dynamicImageToPixmap (ImageRGBA8 img) = Right $ internalDIToPm img $ pixelRGBA8ToRGB
+dynamicImageToPixmap (ImageYCbCr8 img) = Right $ internalDIToPm img $ pixelRGB8ToRGB . convertPixel
 dynamicImageToPixmap dyimg =
         Left $ concat ["Unsupported image ", colorType dyimg, " ", show (dynWidth dyimg), "x", show (dynHeight dyimg)]
 
