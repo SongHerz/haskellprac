@@ -1,4 +1,4 @@
-module Encoder where
+module Decoder (decodePic) where
 
 import Data.Array (array)
 import EAN13 (findEAN13, Pixmap, RGB, Digit)
