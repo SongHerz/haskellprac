@@ -2,11 +2,13 @@ import Control.Monad (when)
 import System.Exit (exitFailure)
 import System.Environment (getArgs)
 
+import Util (split)
+
 main = do
     args <- getArgs
 
     when (length args /= 2) $ do
-        putStrLn "Syntax: passwd-al filename uild"
+        putStrLn "Syntax: passwd-al filename uid"
         exitFailure
 
     content <- readFile (args !! 0)
@@ -26,14 +28,3 @@ parseLine :: String -> (Integer, String)
 parseLine line = let fields = split ':' line
                      in (read (fields !! 2), fields !! 0) 
 
-split :: Eq a => a -> [a] -> [[a]]
-split delim str = 
-        let (before, reminder) = span (/= delim) str
-            in
-            if null reminder
-               then case before of
-                        [] -> []
-                        x  -> [x]
-               else before : case tail reminder of
-                                   [] -> [[]]
-                                   y -> split delim y
