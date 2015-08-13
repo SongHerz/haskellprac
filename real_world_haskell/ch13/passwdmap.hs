@@ -1,6 +1,7 @@
 import qualified Data.Map as M
 import Control.Monad (when)
 import System.Environment (getArgs)
+import System.IO (hFlush, stdout, getLine)
 import System.Exit (exitFailure)
 import Text.Printf (printf)
 
@@ -49,5 +50,37 @@ main = do
     let maps = inputToMaps content
     mainMenu maps
 
-mainMenu maps@(uidmap, usermap) = error "" -- FIXME: FINISH THIS
+mainMenu maps@(uidmap, usermap) = do
+    putStr optionText
+    hFlush stdout
+    sel <- getLine
+    case sel of
+        "1" -> lookupUserName >> mainMenu maps
+        "2" -> lookupUID >> mainMenu maps
+        "3" -> displayFile >> mainMenu maps
+        "4" -> return ()
+        _ -> putStrLn "Invalid selection" >> mainMenu maps
+    where
+        lookupUserName = do
+            putStrLn "Username: "
+            username <- getLine
+            case M.lookup username usermap of
+                Nothing -> putStrLn "Not found."
+                Just x -> print x
+
+        lookupUID = do
+            putStrLn "UID: "
+            uidstring <- getLine
+            case M.lookup (read uidstring) uidmap of
+                Nothing -> putStrLn "Not found."
+                Just x -> print x
+
+        displayFile = putStr . unlines . map (show . snd) . M.toList $ uidmap
+        optionText = "\npasswdmap options:\n\
+                      \\n\
+                      \1   Look up a user name\n\
+                      \2   Lookup a UID\n\
+                      \3   Display entire file\n\
+                      \4   Quit\n\
+                      \Your selection: "
 
