@@ -61,17 +61,18 @@ mainMenu maps@(uidmap, usermap) = do
         "4" -> return ()
         _ -> putStrLn "Invalid selection" >> mainMenu maps
     where
-        lookupUserName = do
-            putStrLn "Username: "
-            username <- getLine
-            case M.lookup username usermap of
-                Nothing -> putStrLn "Not found."
-                Just x -> print x
+        lookupUserName = lookupMapWithPrefix "Username: " id usermap
+        lookupUID = lookupMapWithPrefix "UID: " read uidmap
 
-        lookupUID = do
-            putStrLn "UID: "
-            uidstring <- getLine
-            case M.lookup (read uidstring) uidmap of
+        lookupMapWithPrefix :: (Ord k, Show a) => String -> (String -> k) -> M.Map k a -> IO ()
+        lookupMapWithPrefix prefix keyStr2Key m = do
+            putStrLn prefix
+            keystr <- getLine
+            lookupMap (keyStr2Key keystr) m
+
+        lookupMap :: (Ord k, Show a) => k -> M.Map k a -> IO ()
+        lookupMap k m =
+            case M.lookup k m of
                 Nothing -> putStrLn "Not found."
                 Just x -> print x
 
