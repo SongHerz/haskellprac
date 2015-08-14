@@ -1,3 +1,5 @@
+import Data.List (intercalate)
+
 -- Operators
 data Op = Plus | Minus | Mul | Div | Pow
         deriving (Eq, Show)
@@ -72,3 +74,12 @@ simpleParen x = prettyShow x
 
 instance (Show a, Num a) => Show (SymbolicManip a) where
     show = prettyShow
+
+-- Show SymbolicManip in RPN form
+rpnShow :: (Show a, Num a) => SymbolicManip a ->String
+rpnShow i =
+    let toList (Number x) = [show x]
+        toList (Symbol x) = [x]
+        toList (BinaryArith op a b) = toList a ++ toList b ++ [op2Str op]
+        toList (UniaryArith opstr a) = toList a ++ [opstr]
+    in intercalate " " (toList i)
