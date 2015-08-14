@@ -83,3 +83,40 @@ rpnShow i =
         toList (BinaryArith op a b) = toList a ++ toList b ++ [op2Str op]
         toList (UniaryArith opstr a) = toList a ++ [opstr]
     in intercalate " " (toList i)
+
+-- Some basic simplifications
+-- FIXME: GHCI requires Eq constrain on type var a, WHY ???
+--
+-- [1 of 1] Compiling Main             ( num.hs, interpreted )
+-- 
+-- num.hs:94:26:
+--     Could not deduce (Eq a) arising from the literal ‘1’
+--     from the context (Num a)
+--       bound by the type signature for
+--                  simplify :: Num a => SymbolicManip a -> SymbolicManip a
+--       at num.hs:88:13-57
+--     Possible fix:
+--       add (Eq a) to the context of
+--         the type signature for
+--           simplify :: Num a => SymbolicManip a -> SymbolicManip a
+--     In the pattern: 1
+--     In the pattern: Number 1
+--     In the pattern: (Mul, Number 1, b)
+-- Failed, modules loaded: none.
+simplify :: (Num a, Eq a) => SymbolicManip a -> SymbolicManip a
+simplify (BinaryArith op a b) =
+    let sa = simplify a
+        sb = simplify b
+        in
+        case (op, sa, sb) of
+            (Mul, Number 1, b) -> b
+            (Mul, a, Number 1) -> a
+            (Mul, Number 0, _) -> Number 0
+            (Mul, _, Number 0) -> Number 0
+            (Div, a, Number 1) -> a
+            (Plus, a, Number 0) -> a
+            (Plus, Number 0, b) -> b
+            (Minus, a, Number 0) -> a
+            _ -> BinaryArith op sa sb
+simplify (UniaryArith op a) = UniaryArith op (simplify a)
+simplify x = x
