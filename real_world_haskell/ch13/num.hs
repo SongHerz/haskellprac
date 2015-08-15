@@ -1,3 +1,4 @@
+import Data.Function (on)
 import Data.List (intercalate)
 
 -- Operators
@@ -5,8 +6,7 @@ data Op = Plus | Minus | Mul | Div | Pow
         deriving (Eq, Show)
 
 instance Ord Op where
-    compare a b =
-        compare (prece a) (prece b)
+    compare = compare `on` prece
         where -- precedence of operators
               prece Plus = 0
               prece Minus = 0
