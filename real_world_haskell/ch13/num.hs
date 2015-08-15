@@ -120,3 +120,66 @@ simplify (BinaryArith op a b) =
             _ -> BinaryArith op sa sb
 simplify (UniaryArith op a) = UniaryArith op (simplify a)
 simplify x = x
+
+-- Unit type
+data Units a  = Units a (SymbolicManip a)
+              deriving (Eq)
+
+instance (Num a, Eq a) => Num (Units a) where
+    (Units xa ua) + (Units xb ub)
+        | ua == ub = Units (xa + xb) ua
+        | otherwise = error "Mis-matched units in add or subtract"
+    a - b = a + (negate b)
+    (Units xa ua) * (Units xb ub) = Units (xa * xb) (ua * ub)
+    negate (Units xa ua) = Units (negate xa) ua
+    abs (Units xa ua) = Units (abs xa) ua
+    signum (Units xa ua) = Units (signum xa) (Number 1)
+    fromInteger i = Units (fromInteger i) (Number 1)
+
+instance (Fractional a, Eq a) => Fractional (Units a) where
+    (Units xa ua) / (Units xb ub) = Units (xa / xb) (ua / ub)
+    recip a = 1 / a
+    fromRational r = Units (fromRational r) (Number 1)
+
+-- Use some intelligence for angle calculations: support deg and rad
+instance (Floating a, Eq a) => Floating (Units a) where
+        pi = Units pi (Number 1)
+        exp _ = error "exp not yet implemented"
+        log _ = error "log not yet implemented"
+        (Units xa ua) ** (Units xb ub)
+            | ub == Number 1 = Units (xa ** xb) (ua ** Number xb)
+            | otherwise = error "units for RHS of ** not supported"
+        sqrt (Units xa ua) = Units (sqrt xa) (sqrt ua)
+        sin a = trigo sin a
+        cos a = trigo cos a
+        tan a = trigo tan a
+        asin a = invTrigo asin a
+        acos a = invTrigo acos a
+        atan a = invTrigo atan a
+        sinh = error "sinh not yet implemented in Units"
+        cosh = error "cosh not yet implemented in Units"
+        tanh = error "tanh not yet implemented in Units"
+        asinh = error "asinh not yet implemented in Units"
+        acosh = error "acosh not yet implemented in Units"
+        atanh = error "atanh not yet implemented in Units"
+
+trigo :: (Floating a, Eq a) => (a -> a) -> Units a -> Units a
+trigo f (Units xa ua)
+    | ua == Symbol "rad" = Units (f xa) (Number 1)
+    | ua == Symbol "deg" = Units (f $ deg2rad xa) (Number 1)
+    | otherwise = error "Units for a trigonometric functionn must be deg or rad"
+    where deg2rad x = 2 * pi * x / 360
+
+invTrigo :: (Floating a, Eq a) => (a -> a) -> Units a -> Units a
+invTrigo f (Units xa ua)
+    | ua == Number 1 = Units (f xa) (Symbol "rad")
+    | otherwise = error "Units for an inverse trigonometric function must be unit 1"
+
+units :: (Num z) => z -> String -> Units z
+units a b = Units a (Symbol b)
+
+dropUnits :: (Num z) => Units z -> z
+dropUnits (Units x _) = x
+
+instance (Show a, Num a, Eq a) => Show (Units a) where
+    show (Units xa ua) = show xa ++ "_" ++ prettyShow (simplify ua)
