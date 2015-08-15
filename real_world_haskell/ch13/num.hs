@@ -4,6 +4,17 @@ import Data.List (intercalate)
 data Op = Plus | Minus | Mul | Div | Pow
         deriving (Eq, Show)
 
+instance Ord Op where
+    compare a b =
+        compare (prece a) (prece b)
+        where -- precedence of operators
+              prece Plus = 0
+              prece Minus = 0
+              prece Mul = 1
+              prece Div = 1
+              prece Pow = 2
+         
+
 -- Core symbolic manipulation type
 data SymbolicManip a =
           Number a
@@ -50,10 +61,21 @@ prettyShow :: (Show a, Num a) => SymbolicManip a -> String
 prettyShow (Number x) = show x
 prettyShow (Symbol x) = x
 prettyShow (BinaryArith op a b) =
-    let pa = simpleParen a
-        pb = simpleParen b
+    let pa = showLhs op a
+        pb = showRhs op b
         pop = op2Str op
         in pa ++ pop ++ pb
+    where showLhs = showBinarySub (\pop sop -> sop < pop)
+          showRhs = showBinarySub (\pop sop -> sop <= pop)
+
+          showBinarySub :: (Show a, Num a) => (Op -> Op -> Bool) -> Op -> SymbolicManip a -> String
+          showBinarySub needParen parent_op x@(BinaryArith sub_op _ _) =
+              let substr = prettyShow x
+                  in if needParen parent_op sub_op
+                         then "(" ++ substr ++ ")"
+                         else substr
+          showBinarySub _ _ x = prettyShow x
+
 prettyShow (UniaryArith opstr a) =
     opstr ++ "(" ++ prettyShow a ++ ")"
 
@@ -68,9 +90,10 @@ op2Str Pow = "**"
 -- This is fairly conservative and will add parenthesis when not needed in
 -- some cases.
 -- Haskell will figure out precedence for us while building SymbolicManip.
-simpleParen :: (Show a, Num a) => SymbolicManip a -> String
-simpleParen x@(BinaryArith _ _ _) = "(" ++ prettyShow x ++ ")"
-simpleParen x = prettyShow x
+-- NOT USED ANY MORE.
+-- simpleParen :: (Show a, Num a) => SymbolicManip a -> String
+-- simpleParen x@(BinaryArith _ _ _) = "(" ++ prettyShow x ++ ")"
+-- simpleParen x = prettyShow x
 
 instance (Show a, Num a) => Show (SymbolicManip a) where
     show = prettyShow
