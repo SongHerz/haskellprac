@@ -5,7 +5,8 @@ module DList (
   , empty
   , append
   , cons
-  , dfoldr) where
+  , dfoldr
+  , safeHead) where
 
 newtype DList a = DL {
     unDL :: [a] -> [a]
