@@ -1,5 +1,6 @@
 import Data.Function (on)
 import Data.List (intercalate)
+import qualified Data.Map as M
 
 -- Operators
 data Op = Plus | Minus | Mul | Div | Pow
@@ -206,3 +207,50 @@ dropUnits (Units x _) = x
 
 instance (Show a, Num a, Eq a) => Show (Units a) where
     show (Units xa ua) = show xa ++ "_" ++ prettyShow (simplify ua)
+
+-- Eval a SymbolicManip, and get value of symbols from the given map.
+-- Raise error when a symbol cannot be found from the map.
+eval :: (Num a, Ord a) => M.Map String a -> SymbolicManip a -> a
+eval _ (Number n) = n
+eval m (Symbol s) =
+    case M.lookup s m of
+        Just v -> v
+        Nothing -> error $ "Cannot find value of symbol: " ++ show s
+eval m (BinaryArith op a b) =
+    let va = eval m a
+        vb = eval m b
+    in calc op va vb
+    where calc :: Num a => Op -> a -> a -> a
+          calc Plus a b = a + b
+          calc Minus a b = a - b
+          calc Mul a b = a * b
+          calc Div _ _ = error "DIV not general for all Num instances"
+          calc Pow _ _ = error "POW not general for all Num instances"
+eval m (UniaryArith opstr a) =
+   let v = eval m a
+   in calc opstr v
+   where calc :: Num a => String -> a -> a
+         -- It looks only abs is general for all Num instances
+         calc "abs" v = abs v
+         calc opstr _ = error $ "Do not support '" ++ opstr ++ "' for all Num instances"
+
+-- -------------------
+--   CONSTANT DEMO
+-- -------------------
+consts = 1 + (5 - 3)*(UniaryArith "abs" (-2)) :: SymbolicManip Int
+constsval = eval M.empty consts -- result is 5
+
+-- --------------------
+--   DEMO with Symbol
+-- --------------------
+symbolconsts = 1 + (5 - (Symbol "x"))*(UniaryArith "abs" (-2)) :: SymbolicManip Int
+symbolconstsval = eval (M.singleton "x" 3) symbolconsts -- result is 5
+
+-- --------------------
+--   Errors
+-- --------------------
+symbolconstsval_cannotfound = eval M.empty symbolconsts -- expect exception
+-- not supported binary op
+unsupported_div = eval M.empty $ BinaryArith Div (Number 1) (Number 2) -- expect exception
+-- not supported unary op
+unsupported_sin = eval M.empty $ UniaryArith "sin" (Number 1) -- except exception
