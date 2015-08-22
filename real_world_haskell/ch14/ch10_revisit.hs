@@ -13,6 +13,8 @@
 -- ==&
 -- :-(
 -- But rest code is written by me :-)
+-- putState and getState is used in ch10 for some primary operations,
+-- but I compose new state explicitly here.
 {-# LANGUAGE ScopedTypeVariables #-}
 
 import Data.Char (isSpace, isDigit)
