@@ -1,12 +1,23 @@
 module State (
       State(..)
+    , evalState
+    , execState
     , put
     , get) where
 
 
 newtype State s a = State {
+    -- runstate :: State s a -> s -> (a, s)
     runState :: s -> (a, s)
 }
+
+evalState :: State s a -> s -> a
+evalState m s =  let (v, _) = runState m s
+                 in v
+
+execState :: State s a -> s -> s
+execState m s = let (_, s') = runState m s
+                in s'
 
 -- Equivalent to 'return' of Monad
 returnState :: a -> State s a
