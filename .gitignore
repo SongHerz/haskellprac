@@ -4,3 +4,6 @@
 *.swp
 *.txt
 *.html
+*.tix
+.hpc/
+dist/
