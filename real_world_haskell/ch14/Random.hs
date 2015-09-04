@@ -1,3 +1,4 @@
+import Data.List
 import System.Random
 import State
 import Control.Monad (liftM, liftM2)
@@ -52,11 +53,14 @@ runTwoRandoms = do
     setStdGen gen'
     return v
 
+{-
+- EXAMPLE ON MULTIPLE PIECES OF STATES
+-}
 -- Maintain multiple pieces of states
 data CountedRandom = CountedRandom {
       crGen :: StdGen
-    , crCount :: Int
-}
+      , crCount :: Int
+      } deriving (Show)
 
 type CRState = State CountedRandom
 
@@ -77,3 +81,37 @@ putCount :: Int -> CRState ()
 putCount a = do
     st <- get
     put st { crCount = a}
+
+--
+-- Test code on CountedRandom
+--
+
+-- Initialize a CountedRandom state with global stdGen
+initCountedRandom :: IO CountedRandom
+initCountedRandom = do
+    gen <- getStdGen
+    return CountedRandom {
+          crGen = gen
+        , crCount = 0 }
+
+-- Give an initial CountedRandom,
+-- return an infinite list of (Int, CountedRandom)
+countedRandomSeries :: CountedRandom -> [(Int, CountedRandom)]
+countedRandomSeries cr = let (v, cr') = runState getCountedRandom cr
+                         in (v, cr') : countedRandomSeries cr'
+
+get5Random :: CountedRandom -> [(Int, CountedRandom)]
+get5Random cr = take 5 $ countedRandomSeries cr
+
+g5RPC11g5R :: CountedRandom -> [(Int, CountedRandom)]
+g5RPC11g5R cr = concat [_5r0, [(c, cr'')], _5r1]
+    where _5r0 = get5Random cr
+          (c, cr') = last _5r0
+          cr'' = execState (putCount 11) cr'
+          _5r1 = get5Random cr''
+
+testCountedRandom :: IO ()
+testCountedRandom = do
+    counted_random <- initCountedRandom
+    let cr_list = g5RPC11g5R counted_random
+    putStrLn $ intercalate "\n" $ map show cr_list
