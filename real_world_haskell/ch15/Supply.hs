@@ -25,6 +25,8 @@ instance Monad (Supply s) where
     return = S . return
 -}
 
+-- As `get` and `put` are not derived by Supply, the do block is applied to
+-- a state monad, and the do block has to be wrapped by `S` explicitly.
 next :: Supply s (Maybe s)
 next = S $ do
     st <- get
