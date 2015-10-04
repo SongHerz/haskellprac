@@ -34,18 +34,37 @@ This is analogous resursive function definition:
 2. The function with other values are calculated recursively,
    and finally use the expression of item 1 to give the result.
 
+======
 Nat.hs
-Section 3.1 Dynamic computation
+======
+- Section 3.1 Dynamic computation
 This is trivial implementation with ordinary technique.
 
+=======
 Nat2.hs
-Section 3.2.1 Predicates
+=======
+- Section 3.2.1 Predicates
 Use ':type expr' to check if a computation true or false,
 When ':type expr' success, the checking is true.
 Otherwise, the checking is false.
 
+=======
 Nat3.hs
-Section 3.2.2 Relations
+=======
+- Section 3.2.2 Relations
 Use classes and instances to define rules.
 And the type checker can use these rules to infer the final type as the result.
 
+=======
+Nat4.hs
+=======
+- Section 3.2.3 Functions
+Add functional dependencies in addition to Nat3.hs
+And the type checker can infer the complete final type.
+
+For the Add/Mul example, the key is how to write rules.
+Comments on instances (rules) of Add/Mul have been added to instances declarations.
+
+- Section 3.3 Mixing static and dynamic computations
+For the Pow and Power example, the key is also on how to write rules.
+Comments on classes and instances (rules) have been added to declarations.
