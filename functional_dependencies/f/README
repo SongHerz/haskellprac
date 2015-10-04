@@ -1,0 +1,16 @@
+This contains code on the paper:
+Fun with Functional Dependencies
+or (Draft) Types as Values in Static Computations in Haskell
+
+The front page of the paper:
+http://www.cse.chalmers.se/~hallgren/Papers/wm01.html
+
+The pdf link of the paper:
+http://www.cse.chalmers.se/~hallgren/Papers/hallgren.pdf
+
+The paper has been downloaded and stored in this directory:
+hallgren.pdf
+
+
+I think the key is to use types and their constrains as rules, 
+and let Haskell type system (the type checker) to derive types as outputs of computations (like Prolog).
