@@ -12,5 +12,40 @@ The paper has been downloaded and stored in this directory:
 hallgren.pdf
 
 
+My notes:
+
 I think the key is to use types and their constrains as rules, 
 and let Haskell type system (the type checker) to derive types as outputs of computations (like Prolog).
+
+By reading the paper for a second time, I begin to understand its abstract.
+
+
+Descriptions of examples:
+
+If a class has some operation, the operation number is 1,
+as we need the operation to start the type checker.
+
+There are two kinds of instances:
+1. Instances with determined final data type.
+2. Instances with constrains, and the final type is derived from those constrains recursively.
+
+This is analogous resursive function definition:
+1. A function with determined output value on some given constants.
+2. The function with other values are calculated recursively,
+   and finally use the expression of item 1 to give the result.
+
+Nat.hs
+Section 3.1 Dynamic computation
+This is trivial implementation with ordinary technique.
+
+Nat2.hs
+Section 3.2.1 Predicates
+Use ':type expr' to check if a computation true or false,
+When ':type expr' success, the checking is true.
+Otherwise, the checking is false.
+
+Nat3.hs
+Section 3.2.2 Relations
+Use classes and instances to define rules.
+And the type checker can use these rules to infer the final type as the result.
+
