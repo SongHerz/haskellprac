@@ -68,3 +68,10 @@ Comments on instances (rules) of Add/Mul have been added to instances declaratio
 - Section 3.3 Mixing static and dynamic computations
 For the Pow and Power example, the key is also on how to write rules.
 Comments on classes and instances (rules) have been added to declarations.
+
+================
+InsertionSort.hs
+================
+- Section 3.4 A larger example of static computation
+I have not figured out how rules are specified.
+Study this when I have time.
