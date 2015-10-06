@@ -1,9 +1,10 @@
 import Test.QuickCheck
 
-import Heap (dirs, Dir(..))
+import qualified Heap as H
+import Heap (Dir(..))
 
 prop_basic_dirs :: Bool
-prop_basic_dirs = all (\p -> dirs (fst p) == snd p) n_dirs_pairs
+prop_basic_dirs = all (\p -> H.dirs (fst p) == snd p) n_dirs_pairs
     where n_dirs_pairs = [
                        (1, [])
                      , (2, [L])
@@ -23,10 +24,26 @@ prop_basic_dirs = all (\p -> dirs (fst p) == snd p) n_dirs_pairs
                      , (16, [L, L, L, L])
                    ]
 
+prop_basic_insert :: Bool
+prop_basic_insert = heaps == expected_heaps
+    where prios = [1, 3, 5, 7, 9, 6, 8, 10, 2]
+          heaps = scanl (flip H.insert) H.empty prios
+          expected_heaps = map read [
+                                      "Heap {root = Empty, size = 0}"
+                                    , "Heap {root = Node {prio = 1, left = Empty, right = Empty}, size = 1}"
+                                    , "Heap {root = Node {prio = 1, left = Node {prio = 3, left = Empty, right = Empty}, right = Empty}, size = 2}"
+                                    , "Heap {root = Node {prio = 1, left = Node {prio = 3, left = Empty, right = Empty}, right = Node {prio = 5, left = Empty, right = Empty}}, size = 3}"
+                                    , "Heap {root = Node {prio = 1, left = Node {prio = 3, left = Node {prio = 7, left = Empty, right = Empty}, right = Empty}, right = Node {prio = 5, left = Empty, right = Empty}}, size = 4}"
+                                    , "Heap {root = Node {prio = 1, left = Node {prio = 3, left = Node {prio = 7, left = Empty, right = Empty}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Empty, right = Empty}}, size = 5}"
+                                    , "Heap {root = Node {prio = 1, left = Node {prio = 3, left = Node {prio = 7, left = Empty, right = Empty}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Empty}}, size = 6}"
+                                    , "Heap {root = Node {prio = 1, left = Node {prio = 3, left = Node {prio = 7, left = Empty, right = Empty}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}}, size = 7}"
+                                    , "Heap {root = Node {prio = 1, left = Node {prio = 3, left = Node {prio = 7, left = Node {prio = 10, left = Empty, right = Empty}, right = Empty}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}}, size = 8}"
+                                    , "Heap {root = Node {prio = 1, left = Node {prio = 2, left = Node {prio = 3, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 7, left = Empty, right = Empty}}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}}, size = 9}" ]
 
 runTests :: Args -> IO ()
 runTests args = do
     quickCheckWithResult args prop_basic_dirs
+    quickCheckWithResult args prop_basic_insert
     return ()
 
 args = Args {
