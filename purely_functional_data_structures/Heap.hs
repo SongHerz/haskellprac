@@ -5,6 +5,7 @@ module Heap (
     , empty
     , singleton
     , insert
+    , deleteMin
     ) where
 
 {-
@@ -115,3 +116,59 @@ _insert x node (d:dirs) = if prio node <= prio new_child
 addChild :: a -> a -> Node a -> Node a
 addChild this_new_prio child_prio node@(Node _ Empty _) = node {prio = this_new_prio, left = singletonNode child_prio}
 addChild this_new_prio child_prio node@(Node _ _ Empty) = node {prio = this_new_prio, right = singletonNode child_prio}
+
+deleteMin :: Ord a => Heap a -> Heap a
+deleteMin h = case size h of
+                  0 -> error "empty heap"
+                  1 -> empty
+                  _ -> _deleteNonEmptyHeap h
+
+_deleteNonEmptyHeap :: Ord a => Heap a -> Heap a
+_deleteNonEmptyHeap h = Heap { root = new_root, size = new_size }
+    where new_size = size h - 1
+          node_root = root h
+          last_node_dirs = dirs $ size h
+          (last_node, node_root_without_last_node) = _delNodeWithDirs node_root last_node_dirs
+          -- Replace first node
+          node_root_with_min_node_replaced = node_root_without_last_node { prio = prio last_node }
+          new_root = _percolateDown node_root_with_min_node_replaced
+
+
+-- Delete a node and its children with dirs as guide.
+-- Return (deleted node, the new tree)
+_delNodeWithDirs :: Ord a => Node a -> [Dir] -> (Node a, Node a)
+_delNodeWithDirs node [] = (node, Empty)
+_delNodeWithDirs node (L:dirs) = let (deled_node, new_child) = _delNodeWithDirs (left node) dirs
+                                 in (deled_node, node {left = new_child})
+_delNodeWithDirs node (R:dirs) = let (deled_node, new_child) = _delNodeWithDirs (right node) dirs
+                                 in (deled_node, node {right = new_child})
+
+-- Tune node position 
+_percolateDown :: Ord a => Node a -> Node a
+_percolateDown node@(Node _ Empty Empty) = node
+_percolateDown node@(Node p l Empty) = if prio l < p
+                                       then _percolateDownLeft node
+                                       else node
+_percolateDown node@(Node p Empty r) = if prio r < p
+                                       then _percolateDownRight node
+                                       else node
+_percolateDown node@(Node p l r) = if prio min_child < p
+                                   then case min_child_dir of
+                                            L -> _percolateDownLeft node
+                                            R -> _percolateDownRight node
+                                   else node
+    where (min_child_dir, min_child) = minChild node
+          minChild :: Ord a => Node a -> (Dir, Node a)
+          minChild (Node _ l r) = if prio l <= prio r
+                                  then (L, l)
+                                  else (R, r)
+
+_percolateDownLeft node@(Node p l _) = _percolateDown new_node
+    where new_l = l { prio = p }
+          new_node = node { prio = prio l, left = new_l}
+
+_percolateDownRight node@(Node p _ r) = _percolateDown new_node
+    where new_r = r { prio = p }
+          new_node = node { prio = prio r, right = new_r }
+
+
