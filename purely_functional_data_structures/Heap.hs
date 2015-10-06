@@ -1,3 +1,10 @@
+module Heap (
+      Heap
+    , Dir (..) -- For test only
+    , dirs     -- For test only
+    , empty
+    ) where
+
 {-
 For a complete binary tree of h-level:
 1. There are at most (2^h - 1) nodes.
@@ -37,7 +44,7 @@ data Heap a =
 
 -- Direction for traversing left or right
 data Dir = L | R
-         deriving (Show)
+         deriving (Eq, Show)
 
 -- Give an node number, get a list of directions for node traversal.
 dirs :: Int -> [Dir]
