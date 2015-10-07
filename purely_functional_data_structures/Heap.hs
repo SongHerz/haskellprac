@@ -163,12 +163,12 @@ _percolateDown node@(Node p l r) = if prio min_child < p
                                   then (L, l)
                                   else (R, r)
 
-_percolateDownLeft node@(Node p l _) = _percolateDown new_node
+_percolateDownLeft node@(Node p l _) = new_node
     where new_l = l { prio = p }
-          new_node = node { prio = prio l, left = new_l}
+          new_node = node { prio = prio l, left = _percolateDown new_l}
 
-_percolateDownRight node@(Node p _ r) = _percolateDown new_node
+_percolateDownRight node@(Node p _ r) = new_node
     where new_r = r { prio = p }
-          new_node = node { prio = prio r, right = new_r }
+          new_node = node { prio = prio r, right = _percolateDown new_r }
 
 

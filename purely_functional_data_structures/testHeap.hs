@@ -40,10 +40,28 @@ prop_basic_insert = heaps == expected_heaps
                                     , "Heap {root = Node {prio = 1, left = Node {prio = 3, left = Node {prio = 7, left = Node {prio = 10, left = Empty, right = Empty}, right = Empty}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}}, size = 8}"
                                     , "Heap {root = Node {prio = 1, left = Node {prio = 2, left = Node {prio = 3, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 7, left = Empty, right = Empty}}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}}, size = 9}" ]
 
+prop_basic_delete_min :: Bool
+prop_basic_delete_min = heaps == expected_heaps
+    where prios = [1, 3, 5, 7, 9, 6, 8, 10, 2]
+          heap = foldl (flip H.insert) H.empty prios
+          heaps = take (length prios + 1) $ iterate H.deleteMin heap
+          expected_heaps = map read [
+                                      "Heap {root = Node {prio = 1, left = Node {prio = 2, left = Node {prio = 3, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 7, left = Empty, right = Empty}}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}}, size = 9}"
+                                    , "Heap {root = Node {prio = 2, left = Node {prio = 3, left = Node {prio = 7, left = Node {prio = 10, left = Empty, right = Empty}, right = Empty}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}}, size = 8}"
+                                    , "Heap {root = Node {prio = 3, left = Node {prio = 7, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}}, size = 7}"
+                                    , "Heap {root = Node {prio = 5, left = Node {prio = 7, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 6, left = Node {prio = 8, left = Empty, right = Empty}, right = Empty}}, size = 6}"
+                                    , "Heap {root = Node {prio = 6, left = Node {prio = 7, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 8, left = Empty, right = Empty}}, size = 5}"
+                                    , "Heap {root = Node {prio = 7, left = Node {prio = 9, left = Node {prio = 10, left = Empty, right = Empty}, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}, size = 4}"
+                                    , "Heap {root = Node {prio = 8, left = Node {prio = 9, left = Empty, right = Empty}, right = Node {prio = 10, left = Empty, right = Empty}}, size = 3}"
+                                    , "Heap {root = Node {prio = 9, left = Node {prio = 10, left = Empty, right = Empty}, right = Empty}, size = 2}"
+                                    , "Heap {root = Node {prio = 10, left = Empty, right = Empty}, size = 1}"
+                                    , "Heap {root = Empty, size = 0}" ]
+
 runTests :: Args -> IO ()
 runTests args = do
     quickCheckWithResult args prop_basic_dirs
     quickCheckWithResult args prop_basic_insert
+    quickCheckWithResult args prop_basic_delete_min
     return ()
 
 args = Args {
