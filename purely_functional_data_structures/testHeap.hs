@@ -57,11 +57,20 @@ prop_basic_delete_min = heaps == expected_heaps
                                     , "Heap {root = Node {prio = 10, left = Empty, right = Empty}, size = 1}"
                                     , "Heap {root = Empty, size = 0}" ]
 
+prop_basic_nodesbfs :: Bool
+prop_basic_nodesbfs = nodes == expected_nodes
+    where prios = [1, 3, 5, 7, 9, 6, 8, 10, 2]
+          heap = foldl (flip H.insert) H.empty prios
+          nodes = H.nodesbfs heap
+          expected_nodes = read "[Node {prio = 1, left = Node {prio = 2, left = Node {prio = 3, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 7, left = Empty, right = Empty}}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}},Node {prio = 2, left = Node {prio = 3, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 7, left = Empty, right = Empty}}, right = Node {prio = 9, left = Empty, right = Empty}},Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}},Node {prio = 3, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 7, left = Empty, right = Empty}},Node {prio = 9, left = Empty, right = Empty},Node {prio = 6, left = Empty, right = Empty},Node {prio = 8, left = Empty, right = Empty},Node {prio = 10, left = Empty, right = Empty},Node {prio = 7, left = Empty, right = Empty}]"
+
+
 runTests :: Args -> IO ()
 runTests args = do
     quickCheckWithResult args prop_basic_dirs
     quickCheckWithResult args prop_basic_insert
     quickCheckWithResult args prop_basic_delete_min
+    quickCheckWithResult args prop_basic_nodesbfs
     return ()
 
 args = Args {

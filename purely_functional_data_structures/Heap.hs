@@ -6,6 +6,7 @@ module Heap (
     , singleton
     , insert
     , deleteMin
+    , nodesbfs
     ) where
 
 {-
@@ -171,4 +172,30 @@ _percolateDownRight node@(Node p _ r) = new_node
     where new_r = r { prio = p }
           new_node = node { prio = prio r, right = _percolateDown new_r }
 
+consNonEmpty :: Node a -> [Node a] -> [Node a]
+consNonEmpty Empty ns = ns
+consNonEmpty n ns = n : ns
 
+-- Get a list of nodes in breadth-first search order
+-- The return list contain the root node.
+-- And the list contain no Empty node.
+_nodesbfs :: Node a -> [[Node a]]
+_nodesbfs Empty = [[]]
+_nodesbfs n = [n] : collectChildren [n]
+    where
+        -- Collect direct children of a given list of node
+        -- And store them in [[nodes of one layer]]
+        collectChildren :: [Node a] -> [[Node a]]
+        collectChildren [] = [[]]
+        collectChildren (Empty:ns) = collectChildren ns
+        collectChildren ns = children : collectChildren children
+            where 
+                children = _childrenOfOneLayer ns
+                _childrenOfOneLayer [] = []
+                _childrenOfOneLayer (Empty:ns) = _childrenOfOneLayer ns
+                _childrenOfOneLayer (n:ns) = consNonEmpty (left n) $
+                                             consNonEmpty (right n) $
+                                             _childrenOfOneLayer ns
+
+nodesbfs :: Heap a -> [Node a]
+nodesbfs h = concat $ _nodesbfs $ root h
