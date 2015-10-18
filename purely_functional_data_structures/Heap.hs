@@ -7,6 +7,10 @@ module Heap (
     , insert
     , deleteMin
     , nodesbfs
+    --
+    -- For test only
+    , Node (..)
+    , isCompleteBinary
     ) where
 
 {-
@@ -197,5 +201,31 @@ _nodesbfs n = [n] : collectChildren [n]
                                              consNonEmpty (right n) $
                                              _childrenOfOneLayer ns
 
+nnodesbfs :: Node a -> [Node a]
+nnodesbfs n = concat $ _nodesbfs n
+
 nodesbfs :: Heap a -> [Node a]
-nodesbfs h = concat $ _nodesbfs $ root h
+nodesbfs h = nnodesbfs $ root h
+
+-- Check if a binary tree is a complete binary tree.
+isCompleteBinary :: Node a -> Bool
+isCompleteBinary Empty = True
+isCompleteBinary n = snd $ foldl (flip _isCompleteBinary) (False, True) (nnodesbfs n)
+--    where
+-- _isCompleteBinary takes a state that records if a node with
+-- none or one children has been reached.
+-- Empty node is NOT intended to give to this function.
+-- (node with empty has been reached state, result)
+_isCompleteBinary :: Node a -> (Bool, Bool) -> (Bool, Bool)
+_isCompleteBinary Empty _ = error "Empty node should not be given"
+_isCompleteBinary _ (state, False) = (state, False)
+_isCompleteBinary n (True, _) = case (left n, right n) of
+                                    (Empty, Empty) -> (True, True)
+                                    _ -> (True, False)
+_isCompleteBinary n (False, _) = case (left n, right n) of
+                                     (_, Empty) -> (True, True)
+                                     (Empty, _) -> (True, False)
+                                     (_, _) -> (False, True)
+
+-- sanityCheck :: Heap a -> Bool
+-- sanityCheck h = _sanityCheck 
