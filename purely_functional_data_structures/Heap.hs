@@ -7,6 +7,7 @@ module Heap (
     , insert
     , deleteMin
     , nodesbfs
+    , sanityCheck
     --
     -- For test only
     , Node (..)
@@ -211,21 +212,29 @@ nodesbfs h = nnodesbfs $ root h
 isCompleteBinary :: Node a -> Bool
 isCompleteBinary Empty = True
 isCompleteBinary n = snd $ foldl (flip _isCompleteBinary) (False, True) (nnodesbfs n)
---    where
--- _isCompleteBinary takes a state that records if a node with
--- none or one children has been reached.
--- Empty node is NOT intended to give to this function.
--- (node with empty has been reached state, result)
-_isCompleteBinary :: Node a -> (Bool, Bool) -> (Bool, Bool)
-_isCompleteBinary Empty _ = error "Empty node should not be given"
-_isCompleteBinary _ (state, False) = (state, False)
-_isCompleteBinary n (True, _) = case (left n, right n) of
-                                    (Empty, Empty) -> (True, True)
-                                    _ -> (True, False)
-_isCompleteBinary n (False, _) = case (left n, right n) of
-                                     (_, Empty) -> (True, True)
-                                     (Empty, _) -> (True, False)
-                                     (_, _) -> (False, True)
+    where
+        -- _isCompleteBinary takes a state that records if a node with
+        -- none or one children has been reached.
+        -- Empty node is NOT intended to give to this function.
+        -- (node with empty has been reached state, result)
+        _isCompleteBinary :: Node a -> (Bool, Bool) -> (Bool, Bool)
+        _isCompleteBinary Empty _ = error "Empty node should not be given"
+        _isCompleteBinary _ (state, False) = (state, False)
+        _isCompleteBinary n (True, _) = case (left n, right n) of
+                                            (Empty, Empty) -> (True, True)
+                                            _ -> (True, False)
+        _isCompleteBinary n (False, _) = case (left n, right n) of
+                                             (_, Empty) -> (True, True)
+                                             (Empty, _) -> (True, False)
+                                             (_, _) -> (False, True)
 
--- sanityCheck :: Heap a -> Bool
--- sanityCheck h = _sanityCheck 
+sanityCheck :: Ord a => Heap a -> Bool
+sanityCheck h = isCompleteBinary (root h)
+                && all prioGood nodes
+                && length nodes == size h
+    where nodes = nodesbfs h
+          prioGood Empty = True
+          prioGood n = _prioGood n (left n) && _prioGood n (right n)
+          _prioGood Empty _ = error "Empty node not intended"
+          _prioGood n Empty = True
+          _prioGood n0 n1 = prio n0 <= prio n1

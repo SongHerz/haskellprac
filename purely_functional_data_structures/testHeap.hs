@@ -25,7 +25,7 @@ prop_basic_dirs = all (\p -> H.dirs (fst p) == snd p) n_dirs_pairs
                    ]
 
 prop_basic_insert :: Bool
-prop_basic_insert = heaps == expected_heaps
+prop_basic_insert = heaps == expected_heaps && all H.sanityCheck heaps
     where prios = [1, 3, 5, 7, 9, 6, 8, 10, 2]
           heaps = scanl (flip H.insert) H.empty prios
           expected_heaps = map read [
@@ -41,7 +41,7 @@ prop_basic_insert = heaps == expected_heaps
                                     , "Heap {root = Node {prio = 1, left = Node {prio = 2, left = Node {prio = 3, left = Node {prio = 10, left = Empty, right = Empty}, right = Node {prio = 7, left = Empty, right = Empty}}, right = Node {prio = 9, left = Empty, right = Empty}}, right = Node {prio = 5, left = Node {prio = 6, left = Empty, right = Empty}, right = Node {prio = 8, left = Empty, right = Empty}}}, size = 9}" ]
 
 prop_basic_delete_min :: Bool
-prop_basic_delete_min = heaps == expected_heaps
+prop_basic_delete_min = heaps == expected_heaps && all H.sanityCheck heaps
     where prios = [1, 3, 5, 7, 9, 6, 8, 10, 2]
           heap = foldl (flip H.insert) H.empty prios
           heaps = take (length prios + 1) $ iterate H.deleteMin heap
